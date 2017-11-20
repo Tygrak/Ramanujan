@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" type="text/css" href="sheet.css">
+    <title>Ramanujan</title>
+  </head>
+
+  <body>
+    <div class="main">
+      <p id="textarea">
+        Ramanujan
+      </p>
+      <div id="inputequation">
+        <input type="text" name="equation" value="-0.5">
+        <br><br>
+        <button id="calculatebutton">Calculate</button>
+      </div>
+      <br><br>
+      <div id="results">
+        <div class="resultitem border">
+          <div class="type">
+            Real root:
+          </div>
+          <div class="result">
+            5
+          </div>
+        </div>
+        <div class="resultitem">
+          <div class="type">
+            Complex root:
+          </div>
+          <div class="result">
+            2+i
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="application/dart" src="main.dart"></script>
+    <script src="packages/browser/dart.js"></script>
+  </body>
+</html>
