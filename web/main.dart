@@ -53,35 +53,59 @@ Complex Pow(double n, Complex toPow){
 void main(){
   button = querySelector("#calculatebutton");
   button.addEventListener("click", ButtonClicked);
-  print(GetPostfixValue(["5", "2", "+", "3", "*", "3", "-", "6", "/"]));
 }
 
 void ButtonClicked(e){
+  PageClearResult();
   InputElement element = querySelector("[name=equation]");
   String equation = element.value;
-  print(equation);
+  List<String> inFixStack = ParseEquation(equation);
+  print("$inFixStack");
+  List<String> postFixStack = InfixToPostfix(inFixStack);
+  try {
+    double expressionValue = GetPostfixValue(postFixStack);
+    print("$inFixStack -> $postFixStack -> $expressionValue");
+    PageAddResult("Result", "$expressionValue");
+  } catch (e) {
+  }
+}
+
+void PageClearResult(){
+  Element results = querySelector("#results");
+  results.innerHtml = "";
+}
+
+void PageAddResult(String type, String value){
+  Element results = querySelector("#results");
+  String result = 
+"""<div class="${results.innerHtml.contains("resultitem") ? "resultitem border" : "resultitem"}">
+    <div class="type">
+      $type:
+    </div>
+    <div class="result">
+      $value
+    </div>
+  </div>""";
+  results.innerHtml = result + results.innerHtml;
 }
 
 List<String> ParseEquation(String equation){
-  equation = equation.replaceAll(new RegExp("\s"), "");
+  equation = equation.replaceAll(new RegExp("[	 ]"), "");
   String number = "";
   String lastSymbol = "";
   List<String> stack = new List<String>();
-  for (var i = 0; i < equation.length; i++){
-    void AddNumberToStack(){
-      if (number != ""){
-        stack.add(number);
-        number = "";
-      }
+  void AddNumberToStack(){
+    if (number != ""){
+      stack.add(number);
+      number = "";
     }
-    lastSymbol = equation[i];
-    if (equation[i].contains(new RegExp("[0-9i.]"))){
-      number += equation[i];
-    } else if (equation[i] == "+"){
+  }
+  for (var i = 0; i < equation.length; i++){
+    if (equation[i] == "+"){
       AddNumberToStack();
       stack.add("+");
     } else if (equation[i] == "-"){
-      if (!lastSymbol.contains(new RegExp("[0-9i.)]"))){
+      if (!lastSymbol.contains(new RegExp("[0-9i.)]")) && number == ""){
         number += "-";
       } else{
         AddNumberToStack();
@@ -91,6 +115,7 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("**");
       lastSymbol = "**";
+      i++;
     } else if (equation[i] == "^"){
       AddNumberToStack();
       stack.add("**");
@@ -106,7 +131,10 @@ List<String> ParseEquation(String equation){
       stack.add("%");
     } else if (equation[i] == "("){
       bool flag = false;
-      if (number != ""){
+      if (number == "-"){
+        number = "-1";
+        flag = true;
+      } else if (number != ""){
         flag = true;
       }
       AddNumberToStack();
@@ -117,31 +145,71 @@ List<String> ParseEquation(String equation){
     } else if (equation[i] == ")"){
       AddNumberToStack();
       stack.add(")");
+    } else if (equation.length > i+2 && equation[i] == "s" && equation[i+1] == "i" && equation[i+2] == "n"){
+      AddNumberToStack();
+      stack.add("sin");
+      i += 2;
+    } else if (equation.length > i+2 && equation[i] == "c" && equation[i+1] == "o" && equation[i+2] == "s"){
+      AddNumberToStack();
+      stack.add("cos");
+      i += 2;
+    } else if (equation.length > i+2 && equation[i] == "l" && equation[i+1] == "o" && equation[i+2] == "g"){
+      AddNumberToStack();
+      stack.add("log");
+      i += 2;
+    } else if (equation.length > i+1 && equation[i] == "l" && equation[i+1] == "n"){
+      AddNumberToStack();
+      stack.add("ln");
+      i += 1;
+    } else if (equation.length > i+3 && equation[i] == "s" && equation[i+1] == "q" && equation[i+2] == "r" && equation[i+3] == "t"){
+      AddNumberToStack();
+      stack.add("sqrt");
+      i += 3;
+    } else if (equation[i].contains(new RegExp("[0-9i.]"))){
+      number += equation[i];
     }
+    lastSymbol = equation[i];
   }
+  AddNumberToStack();
   return stack;
 }
 
 List<String> InfixToPostfix(List<String> inFixStack){
   List<String> stack = new List<String>();
-  String lastOperation = "";
+  List<String> opstack = new List<String>();
   for (var i = 0; i < inFixStack.length; i++){
-    int partEnd = i;
-    for (var j = i; j < inFixStack.length; j++){
-      if (inFixStack[j] == "+" || inFixStack[j] == "-"){
-        partEnd = j;
-        break;
+    if (inFixStack[i].contains(new RegExp("[0-9i.]")) && inFixStack[i] != "sin" && inFixStack[i] != "sign" && inFixStack[i] != "ceil"){
+      stack.add(inFixStack[i]);
+    } else{
+      if (inFixStack[i] == "("){
+        opstack.add("(");
+      } else if (inFixStack[i] == ")"){
+        for (var j = opstack.length-1; j >= 0; j--){
+          String last = opstack.removeLast();
+          if (last != "("){
+            stack.add(last);
+          } else{
+            break;
+          }
+        }
+      } else if (opstack.length == 0 || opstack[opstack.length-1] == "("){
+        opstack.add(inFixStack[i]);
+      } else if (GetOpPrecedence(opstack[opstack.length-1]) >= GetOpPrecedence(inFixStack[i])){
+        while (opstack.length > 0 && GetOpPrecedence(opstack[opstack.length-1]) >= GetOpPrecedence(inFixStack[i])){
+          stack.add(opstack.removeLast());
+        }
+        opstack.add(inFixStack[i]);
+      } else if (GetOpPrecedence(opstack[opstack.length-1]) < GetOpPrecedence(inFixStack[i])){
+        opstack.add(inFixStack[i]);
       }
     }
-    for (var j = i; j < inFixStack.length; j++){
-      if (inFixStack[j] == "+" || inFixStack[j] == "-"){
-        partEnd = j;
-        break;
-      }
-    }
-    i = partEnd;
+    print("${inFixStack[i]} : $opstack : $stack");
   }
-  return inFixStack;
+  for (var j = opstack.length-1; j >= 0; j--){
+    stack.add(opstack.removeLast());
+    print("_ : $opstack : $stack");
+  }
+  return stack;
 }
 
 double GetPostfixValue(List<String> postfixStack){
@@ -163,6 +231,9 @@ double GetPostfixValue(List<String> postfixStack){
     } else if (postfixStack[i] == "*"){
       double last = stack.removeLast();
       stack.add(stack.removeLast()*last);
+    } else if (postfixStack[i] == "**"){
+      double last = stack.removeLast();
+      stack.add(pow(stack.removeLast(), last));
     } else if (postfixStack[i] == "/"){
       double last = stack.removeLast();
       stack.add(stack.removeLast()/last);
@@ -177,11 +248,10 @@ double GetPostfixValue(List<String> postfixStack){
       stack.add(tan(stack.removeLast()));
     } else if (postfixStack[i] == "sqrt"){
       stack.add(sqrt(stack.removeLast()));
-    } else if (postfixStack[i] == "pow"){
-      double last = stack.removeLast();
-      stack.add(pow(stack.removeLast(), last));
-    } else if (postfixStack[i] == "ln" || postfixStack[i] == "log"){
+    } else if (postfixStack[i] == "ln"){
       stack.add(log(stack.removeLast()));
+    } else if (postfixStack[i] == "log"){
+      stack.add(log(stack.removeLast())/log(10));
     } else if (postfixStack[i] == "abs"){
       double last = stack.removeLast();
       if (last > 0){
@@ -204,12 +274,26 @@ double GetPostfixValue(List<String> postfixStack){
       stack.add((stack.removeLast()).ceilToDouble());
     } else if (postfixStack[i] == "round"){
       stack.add((stack.removeLast()).roundToDouble());
-    } else if (postfixStack[i] == "pi"){
-      stack.add(PI);
-    } else if (postfixStack[i] == "e"){
-      stack.add(E);
     }
-    //print(stack);
   }
   return stack.removeLast().toDouble();
+}
+
+int GetOpPrecedence(String op){
+  if (op == "+"){
+    return 1;
+  } else if (op == "-"){
+    return 1;
+  } else if (op == "*"){
+    return 2;
+  } else if (op == "/"){
+    return 2;
+  } else if (op == "%"){
+    return 2;
+  } else if (op == "**"){
+    return 3;
+  } else if (op == "("){
+    return 0;
+  } 
+  return 1;
 }
