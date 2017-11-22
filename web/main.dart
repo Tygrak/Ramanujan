@@ -1,54 +1,10 @@
 import 'dart:html';
 import 'dart:math';
 import 'dart:collection';
+import 'Variable.dart';
+import 'Complex.dart';
 
 ButtonElement button;
-
-class Complex {
-  double _r,_i;
- 
-  Complex(this._r,this._i);
-  double get r => _r;
-  double get i => _i;
-  int get hashCode => ((17 * r) * 31 + i).floor();
-  String toString() => "($r,$i)";
- 
-  Complex operator +(Complex other) => new Complex(r+other.r,i+other.i);
-  Complex operator -(Complex other) => new Complex(r-other.r,i-other.i);
-  Complex operator *(Complex other) => new Complex(r*other.r-i*other.i,r*other.i+other.r*i);
-  Complex operator /(Complex other) => _Divide(other);
-  bool operator ==(Complex other) => (r == other.r) && (i == other.i);
-  Complex _Divide (Complex other){
-    double temp = other.r*other.r + other.i*other.i;
-    if (temp == 0){
-      return new Complex(0.0, 0.0);
-      //throw new Exception("Complex division leads to division by zero.");
-    }
-    return new Complex((r*other.r + i*other.i)/temp, (i*other.r - r*other.i)/temp);
-  }
-  Complex pow (int toPow){
-    Complex val = this;
-    for (var i = 0; i < toPow; i++) {
-      val = val * this;
-    }
-    return val;
-  }
-  Complex timesConst (num constant){
-    return new Complex(r*constant, i*constant);
-  }
-  Complex sin (){
-    return (Pow(E, new Complex(0.0, 1.0)*this)-Pow(E, new Complex(0.0, -1.0)*this))/(new Complex(0.0, 1.0).timesConst(2));
-  }
-  Complex cos (){
-    return (Pow(E, new Complex(0.0, 1.0)*this)+Pow(E, new Complex(0.0, -1.0)*this))/(new Complex(1.0, 0.0).timesConst(2));
-  }
-  double abs() => r*r+i*i;
-}
-
-Complex Pow(double n, Complex toPow){
-  //12^(3 + 2 I) = 1728 cos(2 log(12)) + 1728 i sin(2 log(12))
-  return new Complex(cos(toPow.i * log(n)), sin(toPow.i * log(n))).timesConst(pow(n, toPow.r));
-}
 
 void main(){
   button = querySelector("#calculatebutton");
@@ -59,14 +15,18 @@ void ButtonClicked(e){
   PageClearResult();
   InputElement element = querySelector("[name=equation]");
   String equation = element.value;
-  List<String> inFixStack = ParseEquation(equation);
-  print("$inFixStack");
-  List<String> postFixStack = InfixToPostfix(inFixStack);
+  List<String> infixStack = ParseEquation(equation);
+  print("$infixStack");
+  List<String> postfixStack = InfixToPostfix(infixStack);
+  print("----------");
   try {
-    double expressionValue = GetPostfixValue(postFixStack);
-    print("$inFixStack -> $postFixStack -> $expressionValue");
+    double expressionValue = GetPostfixValue(postfixStack);
+    print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
   } catch (e) {
+    VariablePolynom vp = SimplifyPostfix(postfixStack);
+    print("$infixStack -> $postfixStack -> $vp");
+    PageAddResult("Simplified", "$vp");
   }
 }
 
@@ -105,7 +65,7 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("+");
     } else if (equation[i] == "-"){
-      if (!lastSymbol.contains(new RegExp("[0-9i.)]")) && number == ""){
+      if (!lastSymbol.contains(new RegExp("[0-9.)]")) && number == ""){
         number += "-";
       } else{
         AddNumberToStack();
@@ -145,28 +105,65 @@ List<String> ParseEquation(String equation){
     } else if (equation[i] == ")"){
       AddNumberToStack();
       stack.add(")");
-    } else if (equation.length > i+2 && equation[i] == "s" && equation[i+1] == "i" && equation[i+2] == "n"){
+    } else if (equation.length > i+1 && equation.substring(i, i+2) == "pi"){
+      if (number == "-"){
+        number += PI.toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = PI.toString();
+      } else{
+        number = PI.toString();
+      }
+      AddNumberToStack();
+      i += 1;
+    } else if (equation[i] == "e"){
+      if (number == "-"){
+        number += E.toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = E.toString();
+      } else{
+        number = E.toString();
+      }
+      AddNumberToStack();
+    } else if (equation[i] == "!"){
+      AddNumberToStack();
+      stack.add("!");
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "sin"){
       AddNumberToStack();
       stack.add("sin");
       i += 2;
-    } else if (equation.length > i+2 && equation[i] == "c" && equation[i+1] == "o" && equation[i+2] == "s"){
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "cos"){
       AddNumberToStack();
       stack.add("cos");
       i += 2;
-    } else if (equation.length > i+2 && equation[i] == "l" && equation[i+1] == "o" && equation[i+2] == "g"){
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "log"){
       AddNumberToStack();
       stack.add("log");
       i += 2;
-    } else if (equation.length > i+1 && equation[i] == "l" && equation[i+1] == "n"){
+    } else if (equation.length > i+1 && equation.substring(i, i+2) == "ln"){
       AddNumberToStack();
       stack.add("ln");
       i += 1;
-    } else if (equation.length > i+3 && equation[i] == "s" && equation[i+1] == "q" && equation[i+2] == "r" && equation[i+3] == "t"){
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "sqrt"){
       AddNumberToStack();
       stack.add("sqrt");
       i += 3;
-    } else if (equation[i].contains(new RegExp("[0-9i.]"))){
+    } else if (equation[i].contains(new RegExp("[0-9.]"))){
       number += equation[i];
+    } else{
+      if (number == "-"){
+        number += equation[i];
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = equation[i];
+      } else{
+        number = equation[i];
+      }
+      AddNumberToStack();
     }
     lastSymbol = equation[i];
   }
@@ -174,16 +171,16 @@ List<String> ParseEquation(String equation){
   return stack;
 }
 
-List<String> InfixToPostfix(List<String> inFixStack){
+List<String> InfixToPostfix(List<String> infixStack){
   List<String> stack = new List<String>();
   List<String> opstack = new List<String>();
-  for (var i = 0; i < inFixStack.length; i++){
-    if (inFixStack[i].contains(new RegExp("[0-9i.]")) && inFixStack[i] != "sin" && inFixStack[i] != "sign" && inFixStack[i] != "ceil"){
-      stack.add(inFixStack[i]);
+  for (var i = 0; i < infixStack.length; i++){
+    if (infixStack[i].contains(new RegExp("[0-9.]")) || (infixStack[i].contains(new RegExp("[A-Za-z]")) && infixStack[i].length == 1)){
+      stack.add(infixStack[i]);
     } else{
-      if (inFixStack[i] == "("){
+      if (infixStack[i] == "("){
         opstack.add("(");
-      } else if (inFixStack[i] == ")"){
+      } else if (infixStack[i] == ")"){
         for (var j = opstack.length-1; j >= 0; j--){
           String last = opstack.removeLast();
           if (last != "("){
@@ -193,23 +190,81 @@ List<String> InfixToPostfix(List<String> inFixStack){
           }
         }
       } else if (opstack.length == 0 || opstack[opstack.length-1] == "("){
-        opstack.add(inFixStack[i]);
-      } else if (GetOpPrecedence(opstack[opstack.length-1]) >= GetOpPrecedence(inFixStack[i])){
-        while (opstack.length > 0 && GetOpPrecedence(opstack[opstack.length-1]) >= GetOpPrecedence(inFixStack[i])){
+        opstack.add(infixStack[i]);
+      } else if (GetOpPrecedence(opstack[opstack.length-1]) >= GetOpPrecedence(infixStack[i])){
+        while (opstack.length > 0 && GetOpPrecedence(opstack[opstack.length-1]) >= GetOpPrecedence(infixStack[i])){
           stack.add(opstack.removeLast());
         }
-        opstack.add(inFixStack[i]);
-      } else if (GetOpPrecedence(opstack[opstack.length-1]) < GetOpPrecedence(inFixStack[i])){
-        opstack.add(inFixStack[i]);
+        opstack.add(infixStack[i]);
+      } else if (GetOpPrecedence(opstack[opstack.length-1]) < GetOpPrecedence(infixStack[i])){
+        opstack.add(infixStack[i]);
       }
     }
-    print("${inFixStack[i]} : $opstack : $stack");
+    print("${infixStack[i]} : $opstack : $stack");
   }
   for (var j = opstack.length-1; j >= 0; j--){
     stack.add(opstack.removeLast());
     print("_ : $opstack : $stack");
   }
   return stack;
+}
+
+VariablePolynom SimplifyPostfix(List<String> postfixStack){
+  List<VariablePolynom> stack = new List<VariablePolynom>();
+  for (var i = 0; i < postfixStack.length; i++){
+    VariablePolynom value;
+    try{
+      VariablePolynom vp = new VariablePolynom();
+      double val = num.parse(postfixStack[i]);
+      vp.variables.add(new Variable(val, 0.0));
+      stack.add(vp);
+    } catch (e){
+      try{
+        if (postfixStack[i].contains(new RegExp("[A-Za-z]"))){
+          VariablePolynom vp = new VariablePolynom();
+          String toParse = postfixStack[i].replaceAll(new RegExp("[A-Za-z]"), "");
+          if (toParse.length == 0){
+            toParse = "1";
+          }
+          double val = num.parse(toParse);
+          vp.variables.add(new Variable(val, 1.0));
+          stack.add(vp);
+        }
+      } catch (e){
+      }
+    }
+    if (value != null){
+      stack.add(value);
+    } else if (postfixStack[i] == "+"){
+      VariablePolynom last = stack.removeLast();
+      stack.add(stack.removeLast()+last);
+    } else if (postfixStack[i] == "-"){
+      VariablePolynom last = stack.removeLast();
+      stack.add(stack.removeLast()-last);
+    } else if (postfixStack[i] == "*"){
+      VariablePolynom last = stack.removeLast();
+      stack.add(stack.removeLast()*last);
+    } else if (postfixStack[i] == "**"){
+      VariablePolynom last = stack.removeLast();
+      VariablePolynom slast = stack.removeLast();
+      VariablePolynom res = new VariablePolynom();
+      res.variables = new List.from(slast.variables);
+      if ((last.variables[0].c).round() == 0){
+        res = new VariablePolynom();
+        res.variables.add(new Variable(1.0, 0.0));
+      } else{
+        for (var j = 0; j < (last.variables[0].c-1).round(); j++) {
+          res = res * slast;
+        }
+      }
+      stack.add(res);
+    } else if (postfixStack[i] == "/"){
+      VariablePolynom last = stack.removeLast();
+      stack.add(stack.removeLast()/last);
+    }
+    print("${postfixStack[i]} : $stack");
+  }
+  return stack.removeLast();
 }
 
 double GetPostfixValue(List<String> postfixStack){
@@ -240,6 +295,16 @@ double GetPostfixValue(List<String> postfixStack){
     } else if (postfixStack[i] == "%"){
       double last = stack.removeLast();
       stack.add(stack.removeLast()%last);
+    } else if (postfixStack[i] == "!"){
+      double fact(double val){
+        double res = 1.0;
+        for (var i = 2; i < val.round().abs(); i++) {
+          res *= i;
+        }
+        return res;
+        //TODO: Gamma function.
+      }
+      stack.add(fact(stack.removeLast()));
     } else if (postfixStack[i] == "sin"){
       stack.add(sin(stack.removeLast()));
     } else if (postfixStack[i] == "cos"){
@@ -275,6 +340,7 @@ double GetPostfixValue(List<String> postfixStack){
     } else if (postfixStack[i] == "round"){
       stack.add((stack.removeLast()).roundToDouble());
     }
+    print("${postfixStack[i]} : $stack");
   }
   return stack.removeLast().toDouble();
 }
@@ -295,5 +361,5 @@ int GetOpPrecedence(String op){
   } else if (op == "("){
     return 0;
   } 
-  return 1;
+  return 4;
 }
