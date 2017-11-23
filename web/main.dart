@@ -19,14 +19,29 @@ void ButtonClicked(e){
   print("$infixStack");
   List<String> postfixStack = InfixToPostfix(infixStack);
   print("----------");
-  try {
+  try{
     double expressionValue = GetPostfixValue(postfixStack);
     print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
-  } catch (e) {
-    VariablePolynom vp = SimplifyPostfix(postfixStack);
-    print("$infixStack -> $postfixStack -> $vp");
-    PageAddResult("Simplified", "$vp");
+  } catch (e){
+    try{
+      VariablePolynom vp = SimplifyPostfix(postfixStack);
+      VariablePolynom deriv = DerivatePolynom(vp);
+      VariablePolynom deriv2 = DerivatePolynom(deriv);
+      List<double> roots = GetPolynomRoots(vp);
+      print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
+      for (var i = 0; i < roots.length; i++){
+        print("root : ${roots[i]}");
+        PageAddResult("Root", "${roots[i]}");
+      }
+      if (deriv2.variables.length > 0) PageAddResult("Second Derivate", "$deriv2");
+      if (deriv.variables.length > 0) PageAddResult("Derivate", "$deriv");
+      PageAddResult("Simplified", "$vp");
+      print("1:${vp.Evaluate(1.0)}");
+      print("2:${vp.Evaluate(2.0)}");
+    } catch (e){
+
+    }
   }
 }
 
@@ -65,7 +80,7 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("+");
     } else if (equation[i] == "-"){
-      if (!lastSymbol.contains(new RegExp("[0-9.)]")) && number == ""){
+      if (!(lastSymbol.contains(new RegExp("[0-9.)]")) || lastSymbol.contains(new RegExp("[A-Za-z]"))) && number == ""){
         number += "-";
       } else{
         AddNumberToStack();
@@ -98,7 +113,7 @@ List<String> ParseEquation(String equation){
         flag = true;
       }
       AddNumberToStack();
-      if (flag){
+      if (flag || lastSymbol == ")"){
         stack.add("*");
       }
       stack.add("(");
@@ -264,7 +279,55 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
     }
     print("${postfixStack[i]} : $stack");
   }
-  return stack.removeLast();
+  VariablePolynom polynom = stack.removeLast();
+  for (var i = polynom.variables.length-1; i >= 0; i--){
+    if (polynom.variables[i].c == 0){
+      polynom.variables.removeAt(i);
+    }
+  }
+  return polynom;
+}
+
+VariablePolynom DerivatePolynom(VariablePolynom polynom){
+  VariablePolynom pnom = new VariablePolynom.from(polynom);
+  for (var i = pnom.variables.length-1; i >= 0; i--){
+    if (pnom.variables[i].degree != 0){
+      pnom.variables[i] = new Variable(pnom.variables[i].c*pnom.variables[i].degree, pnom.variables[i].degree-1);
+    } else{
+      pnom.variables.removeAt(i);
+    }
+  }
+  return pnom;
+}
+
+List<double> GetPolynomRoots(VariablePolynom polynom){
+  List<double> roots = new List<double>();
+  VariablePolynom derivate = DerivatePolynom(polynom);
+  void GetRootsFromRange(double min, double max, double step){
+    for (double r = min; r <= max; r+=step){
+      double z = r;
+      for (var i = 0; i < 200; i++){
+        z = z-((polynom.Evaluate(z))/(derivate.Evaluate(z)));
+      }
+      bool f = true;
+      for (var i = 0; i < roots.length; i++){
+        if ((z-roots[i]).abs() < 0.001){
+          f = false;
+          break;
+        }
+      }
+      if (f){
+        if ((z.round()-z).abs() < 0.0000001){
+          roots.add(z.roundToDouble());
+        } else{
+          roots.add(z);
+        }
+      }
+    }
+  }
+  GetRootsFromRange(-10.0, 10.0, 0.1);
+  GetRootsFromRange(-10000.0, 10000.0, 100.0);
+  return roots;
 }
 
 double GetPostfixValue(List<String> postfixStack){

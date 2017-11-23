@@ -1,7 +1,12 @@
+import 'dart:math';
+
 class VariablePolynom{
   List<Variable> variables = new List<Variable>();
 
   VariablePolynom();
+  VariablePolynom.from(VariablePolynom polynom){
+    variables = new List.from(polynom.variables);
+  }
   int get hashCode => (variables.hashCode).floor();
   String toString(){
     String res = "";
@@ -11,10 +16,14 @@ class VariablePolynom{
       else return 0;
     });
     for (var i = 0; i < variables.length; i++){
-      if (res.length > 0){
+      if (res.length > 0 && variables[i].c >= 0){
         res += " + ";
+      } else if (res.length > 0 && variables[i].c < 0){
+        res += " - ";
+      } else if (variables[i].c < 0){
+        res += "-";
       }
-      res += "${variables[i]}";
+      res += "${variables[i].absCoeficient()}";
     }
     return res;
   }
@@ -36,8 +45,11 @@ class VariablePolynom{
       if (v2 != null){
         v2 = v1-v2;
       } else{
-        other.variables.add(new Variable(v1.c, v1.degree));
+        other.variables.add(new Variable(-v1.c, v1.degree));
       }
+    }
+    for (int i = 0; i < other.variables.length; i++) {
+      other.variables[i] = new Variable(-other.variables[i].c, other.variables[i].degree);
     }
     return other;
   }
@@ -48,7 +60,7 @@ class VariablePolynom{
         res.variables.add(v1*v2);
       }
     }
-    //print(res);
+    print(res);
     for (var i = res.variables.length-1; i >= 0; i--){
       for (var j = i-1; j >= 0; j--){
         if (res.variables[i].degree == res.variables[j].degree){
@@ -58,7 +70,7 @@ class VariablePolynom{
         }
       }
     }
-    //print(res);
+    print(res);
     return res;
   }
   VariablePolynom operator /(VariablePolynom other){
@@ -88,6 +100,14 @@ class VariablePolynom{
       }
     }
     return true;
+  }
+
+  double Evaluate(double variableValue){
+    double res = 0.0;
+    for (var i = 0; i < variables.length; i++) {
+      res += variables[i].c*pow(variableValue, variables[i].degree);
+    }
+    return res;
   }
 }
 
@@ -136,4 +156,8 @@ class Variable{
     return new Variable(_c/other._c, _degree-other._degree);
   }
   bool operator ==(Variable other) => (_c == other._c) && (_degree == other._degree);
+
+  Variable absCoeficient(){
+    return new Variable(_c.abs(), _degree);
+  }
 }
