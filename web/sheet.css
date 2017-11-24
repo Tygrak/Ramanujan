@@ -1,10 +1,27 @@
 body {
-    background-color: #111;
+    background-color: #111111;
 }
 
 #wrapper {
-    width: 400px;
+    border: 1px solid black;
+    border-radius: 15px;
+    height: 400px;
     margin: auto;
+    overflow: hidden;
+    width: 400px;
+    -webkit-mask-image:
+    url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAAA5JREFUeNpiYGBgAAgwAAAEAAGbA+oJAAAAAElFTkSuQmCC); /* this fixes the overflow:hidden in Chrome/Opera */
+}
+
+#canvas {
+    height: 400px;
+    width: 400px;
+}
+
+#wrapper canvas {
+    width: 400px;
+    height: 400px;
+    padding: 0px 0px;
 }
 
 #textarea {
@@ -47,6 +64,10 @@ body {
 
 #results .border {
     border-bottom: solid thin black;
+}
+
+#results .hidden {
+    display: none;
 }
 
 .resultitem .type {

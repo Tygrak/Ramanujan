@@ -104,10 +104,29 @@ class VariablePolynom{
 
   double Evaluate(double variableValue){
     double res = 0.0;
-    for (var i = 0; i < variables.length; i++) {
+    for (var i = 0; i < variables.length; i++){
       res += variables[i].c*pow(variableValue, variables[i].degree);
     }
     return res;
+  }
+
+  double GetDegreeCoefficient(int degree){
+    for (var i = 0; i < variables.length; i++){
+      if (variables[i].degree == degree){
+        return variables[i].c;
+      }
+    }
+    return 0.0;
+  }
+
+  Variable GetHighestMonomial(){
+    int highest = 0;
+    for (var i = 1; i < variables.length; i++){
+      if (variables[i].degree > variables[highest].degree){
+        highest = i;
+      }
+    }
+    return variables[highest];
   }
 }
 

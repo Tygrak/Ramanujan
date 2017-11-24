@@ -3,11 +3,15 @@ import 'dart:math';
 import 'dart:collection';
 import 'Variable.dart';
 import 'Complex.dart';
+import 'mathExtensions.dart';
 
 ButtonElement button;
+CanvasElement canvas;
 
 void main(){
   button = querySelector("#calculatebutton");
+  canvas = querySelector("#canvas");
+  print(canvas.className);
   button.addEventListener("click", ButtonClicked);
 }
 
@@ -24,36 +28,51 @@ void ButtonClicked(e){
     print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
   } catch (e){
-    try{
+    //try{
       VariablePolynom vp = SimplifyPostfix(postfixStack);
       VariablePolynom deriv = DerivatePolynom(vp);
       VariablePolynom deriv2 = DerivatePolynom(deriv);
       List<double> roots = GetPolynomRoots(vp);
       print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
+      PlotPolynomFunction(vp, roots);
+      String rootsHtml = "";
       for (var i = 0; i < roots.length; i++){
+        if (rootsHtml != "") rootsHtml += "<br>";
+        rootsHtml += "${roots[i]}";
         print("root : ${roots[i]}");
-        PageAddResult("Root", "${roots[i]}");
+      }
+      if (roots.length == 0){
+        PageAddResult("Roots", "No roots found.");
+      } else if (roots.length == 1){
+        PageAddResult("Root", "${rootsHtml}");
+      } else{
+        PageAddResult("Roots", "${rootsHtml}");
       }
       if (deriv2.variables.length > 0) PageAddResult("Second Derivate", "$deriv2");
       if (deriv.variables.length > 0) PageAddResult("Derivate", "$deriv");
       PageAddResult("Simplified", "$vp");
-      print("1:${vp.Evaluate(1.0)}");
-      print("2:${vp.Evaluate(2.0)}");
-    } catch (e){
-
-    }
+      print("Equation for 1:${vp.Evaluate(1.0)}");
+      print("Equation for 2:${vp.Evaluate(2.0)}");
+    /*} catch (e){
+      print(e);
+    }*/
   }
 }
 
 void PageClearResult(){
-  Element results = querySelector("#results");
+  Element results = querySelector("#resultitems");
   results.innerHtml = "";
+  querySelector("#canvasresult").className = "resultitem hidden";
 }
 
 void PageAddResult(String type, String value){
-  Element results = querySelector("#results");
+  Element results = querySelector("#resultitems");
+  String className = querySelector("#canvasresult").className.contains("hidden") ? "resultitem" : "resultitem border";
+  if (!className.contains("border") && results.innerHtml.contains("resultitem")){
+    className = "resultitem border";
+  }
   String result = 
-"""<div class="${results.innerHtml.contains("resultitem") ? "resultitem border" : "resultitem"}">
+"""<div class="$className">
     <div class="type">
       $type:
     </div>
@@ -303,31 +322,160 @@ VariablePolynom DerivatePolynom(VariablePolynom polynom){
 List<double> GetPolynomRoots(VariablePolynom polynom){
   List<double> roots = new List<double>();
   VariablePolynom derivate = DerivatePolynom(polynom);
+  double NewtonFrom(double r){
+    double z = r;
+    for (var i = 0; i < 1000; i++){
+      z = z-((polynom.Evaluate(z))/(derivate.Evaluate(z)));
+    }
+    if (!z.isFinite){
+      return null;
+    }
+    return z;
+  }
   void GetRootsFromRange(double min, double max, double step){
     for (double r = min; r <= max; r+=step){
-      double z = r;
-      for (var i = 0; i < 200; i++){
-        z = z-((polynom.Evaluate(z))/(derivate.Evaluate(z)));
-      }
+      double root = NewtonFrom(r);
+      if (root == null) continue;
       bool f = true;
       for (var i = 0; i < roots.length; i++){
-        if ((z-roots[i]).abs() < 0.001){
+        if ((root-roots[i]).abs() < 0.001){
           f = false;
           break;
         }
       }
       if (f){
-        if ((z.round()-z).abs() < 0.0000001){
-          roots.add(z.roundToDouble());
+        if ((root.round()-root).abs() < 0.000001){
+          roots.add(root.roundToDouble());
         } else{
-          roots.add(z);
+          roots.add(root);
         }
       }
     }
   }
+  List<int> divisorsNum = NumDivisors(polynom.GetDegreeCoefficient(0).abs().toInt());
+  List<double> divisors = new List<double>();
+  double highestCoefficient = polynom.GetHighestMonomial().c;
+  for (var i = 0; i < divisorsNum.length; i++){
+    divisors.add(divisorsNum[i].toDouble()/highestCoefficient);
+    divisors.add(-divisorsNum[i].toDouble()/highestCoefficient);
+  }
+  print("Potential roots: $divisors");
+  for (var i = 0; i < divisors.length; i++){
+    if (polynom.Evaluate(divisors[i]) == 0){
+      roots.add(divisors[i]);
+    }
+  }
+  for (var i = 0; i < divisors.length; i++){
+    if (!roots.contains(divisors[i])){
+      GetRootsFromRange(divisors[i], divisors[i]+2, 5.0);
+    }
+  }
   GetRootsFromRange(-10.0, 10.0, 0.1);
   GetRootsFromRange(-10000.0, 10000.0, 100.0);
+  for (var i = roots.length-1; i >= 0; i--){
+    if (polynom.Evaluate(roots[i]).abs() > 1){
+      roots.removeAt(i);
+    }
+  }
   return roots;
+}
+
+void PlotPolynomFunction(VariablePolynom polynom, List<double> roots){
+  querySelector("#canvasresult").className = "resultitem";
+  CanvasRenderingContext2D ctx = canvas.context2D;
+  roots.sort();
+  double minX;
+  double maxX;
+  double minY;
+  double maxY;
+  if (roots.length > 0){
+    minX = roots.first-2.0;
+    maxX = roots.last+2.0;
+    if (polynom.Evaluate((maxX+minX)/3) > polynom.Evaluate(2*(maxX+minX)/3)){
+      maxY = polynom.Evaluate((maxX+minX)/3)+3.0;
+      minY = polynom.Evaluate(2*(maxX+minX)/3)-3.0;
+    } else{
+      minY = polynom.Evaluate((maxX+minX)/3)-3.0;
+      maxY = polynom.Evaluate(2*(maxX+minX)/3)+3.0;
+    }
+    if (polynom.Evaluate((maxX+minX)/2) > maxY) maxY = polynom.Evaluate((maxX+minX)/2)+3.0;
+    if (polynom.Evaluate((maxX+minX)/2) < minY) minY = polynom.Evaluate((maxX+minX)/2)-3.0;
+  } else{
+    minX = -5.0;
+    maxX = 5.0;
+    if (polynom.Evaluate((maxX+minX)/3) > polynom.Evaluate(2*(maxX+minX)/3)){
+      maxY = polynom.Evaluate((maxX+minX)/3)+3.0;
+      minY = polynom.Evaluate(2*(maxX+minX)/3)-3.0;
+    } else{
+      minY = polynom.Evaluate((maxX+minX)/3)-3.0;
+      maxY = polynom.Evaluate(2*(maxX+minX)/3)+3.0;
+    }
+    if (polynom.Evaluate((maxX+minX)/2) > maxY) maxY = polynom.Evaluate((maxX+minX)/2)+3.0;
+    if (polynom.Evaluate((maxX+minX)/2) < minY) minY = polynom.Evaluate((maxX+minX)/2)-3.0;
+  }
+  if (!minY.isFinite) minY = -5.0;
+  if (!maxY.isFinite) maxY = 5.0;
+  ctx.fillStyle = "#111111";// = "#292929";
+  ctx.strokeStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  double xorigin = MapToRange(0.0, minX, maxX, 0.0, 400.0);
+  double yorigin = MapToRange(0.0, minY, maxY, 0.0, 400.0);
+  ctx.beginPath();
+  ctx.moveTo(0, 400-yorigin);
+  ctx.lineTo(400, 400-yorigin);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(xorigin, 0);
+  ctx.lineTo(xorigin, 400);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  bool f = true;
+  if (yorigin < 10 || yorigin > 400){
+    yorigin = 22.0;
+    f = false;
+  }
+  for (var i = minX; i < maxX; i+=(maxX-minX)~/10 > 1 ? (maxX-minX)~/10 : 1){
+    if (i <= minX || i >= maxX || i == 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
+    ctx.lineTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+5);
+    ctx.fillText("${i.toStringAsFixed(2)}", MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+18);
+    ctx.closePath();
+    if (f) ctx.stroke();
+  }
+  f = true;
+  if (xorigin < 10 || xorigin > 400){
+    yorigin = 30.0;
+    f = false;
+  }
+  for (var i = minY; i < maxY; i+=(maxY-minY)~/10 > 1 ? (maxY-minY)~/10 : 1){
+    if (i <= minY || i >= maxY || i == 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
+    ctx.lineTo(xorigin+5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
+    ctx.fillText("${i.toStringAsFixed(2)}", xorigin-20, 400-MapToRange(i, minY, maxY, 0.0, 400.0)+4);
+    ctx.closePath();
+    if (f) ctx.stroke();
+  }
+  ctx.fillStyle = "#818181";
+  double lastY;
+  for (var i = 0; i <= 400; i++){
+    double x = MapToRange(i.toDouble(), 0.0, 400.0, minX, maxX);
+    double y = polynom.Evaluate(x);
+    if (lastY == null){
+      lastY = y;
+      continue;
+    }
+    ctx.beginPath();
+    ctx.moveTo(i-1, 400-MapToRange(lastY, minY, maxY, 0.0, 400.0));
+    ctx.lineTo(i, 400-MapToRange(y, minY, maxY, 0.0, 400.0));
+    ctx.closePath();
+    ctx.stroke();
+    lastY = y;
+  }
 }
 
 double GetPostfixValue(List<String> postfixStack){
