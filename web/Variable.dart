@@ -32,7 +32,7 @@ class VariablePolynom{
     for (var v1 in variables){
       Variable v2 = other.variables.firstWhere((Variable v) => v1.degree == v.degree, orElse: () => null);
       if (v2 != null){
-        v2 = v1+v2;
+        other.variables[other.variables.indexOf(v2)] = v1+v2;
       } else{
         other.variables.add(new Variable(v1.c, v1.degree));
       }
@@ -43,7 +43,7 @@ class VariablePolynom{
     for (var v1 in variables){
       Variable v2 = other.variables.firstWhere((Variable v) => v1.degree == v.degree, orElse: () => null);
       if (v2 != null){
-        v2 = v1-v2;
+        other.variables[other.variables.indexOf(v2)] = v1-v2;
       } else{
         other.variables.add(new Variable(-v1.c, v1.degree));
       }
@@ -60,7 +60,7 @@ class VariablePolynom{
         res.variables.add(v1*v2);
       }
     }
-    print(res);
+    //print(res);
     for (var i = res.variables.length-1; i >= 0; i--){
       for (var j = i-1; j >= 0; j--){
         if (res.variables[i].degree == res.variables[j].degree){
@@ -70,7 +70,7 @@ class VariablePolynom{
         }
       }
     }
-    print(res);
+    //print(res);
     return res;
   }
   VariablePolynom operator /(VariablePolynom other){

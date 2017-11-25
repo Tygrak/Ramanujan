@@ -7,6 +7,10 @@ import 'mathExtensions.dart';
 
 ButtonElement button;
 CanvasElement canvas;
+double eMinX;
+double eMinY;
+double eMaxX;
+double eMaxY;
 
 void main(){
   button = querySelector("#calculatebutton");
@@ -19,6 +23,39 @@ void ButtonClicked(e){
   PageClearResult();
   InputElement element = querySelector("[name=equation]");
   String equation = element.value;
+  if (equation.toLowerCase().startsWith("xfrom ") || equation.toLowerCase().startsWith("minx ")){
+    List<String> parts = equation.toLowerCase().split(" ");
+    eMinX = null;
+    eMaxX = null;
+    for (var i = 0; i < parts.length; i++){
+      double val = num.parse(parts[i], (String s) => null);
+      print("${parts[i]} : $val");
+      if (val != null){
+        if (eMinX == null) eMinX = val;
+        else if (eMaxX == null) eMaxX = val;
+        else break;
+      }
+    }
+    print("MinX set to $eMinX, maxX set to $eMaxX");
+    PageAddResult("Result", "MinX set to $eMinX, maxX set to $eMaxX.");
+    return;
+  } else if (equation.toLowerCase().startsWith("yfrom ") || equation.toLowerCase().startsWith("miny ")){
+    List<String> parts = equation.toLowerCase().split(" ");
+    eMinY = null;
+    eMaxY = null;
+    for (var i = 0; i < parts.length; i++){
+      double val = num.parse(parts[i], (String s) => null);
+      print("${parts[i]} : $val");
+      if (val != null){
+        if (eMinY == null) eMinY = val;
+        else if (eMaxY == null) eMaxY = val;
+        else break;
+      }
+    }
+    print("MinY set to $eMinY, maxY set to $eMaxY");
+    PageAddResult("Result", "MinY set to $eMinY, maxY set to $eMaxY.");
+    return;
+  }
   List<String> infixStack = ParseEquation(equation);
   print("$infixStack");
   List<String> postfixStack = InfixToPostfix(infixStack);
@@ -28,13 +65,13 @@ void ButtonClicked(e){
     print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
   } catch (e){
-    //try{
+    try{
       VariablePolynom vp = SimplifyPostfix(postfixStack);
       VariablePolynom deriv = DerivatePolynom(vp);
       VariablePolynom deriv2 = DerivatePolynom(deriv);
       List<double> roots = GetPolynomRoots(vp);
       print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
-      PlotPolynomFunction(vp, roots);
+      PlotPolynomFunction(vp);
       String rootsHtml = "";
       for (var i = 0; i < roots.length; i++){
         if (rootsHtml != "") rootsHtml += "<br>";
@@ -53,9 +90,24 @@ void ButtonClicked(e){
       PageAddResult("Simplified", "$vp");
       print("Equation for 1:${vp.Evaluate(1.0)}");
       print("Equation for 2:${vp.Evaluate(2.0)}");
-    /*} catch (e){
-      print(e);
-    }*/
+    } catch (e){
+      if (e.toString() != "UnsupportedError") print(e);
+      List<double> roots = GetSecantRoots(postfixStack);
+      PlotFunction(postfixStack);
+      String rootsHtml = "";
+      for (var i = 0; i < roots.length; i++){
+        if (rootsHtml != "") rootsHtml += "<br>";
+        rootsHtml += "${roots[i]}";
+        print("root : ${roots[i]}");
+      }
+      if (roots.length == 0){
+        PageAddResult("Roots", "No roots found.");
+      } else if (roots.length == 1){
+        PageAddResult("Root", "${rootsHtml}");
+      } else{
+        PageAddResult("Roots", "${rootsHtml}");
+      }
+    }
   }
 }
 
@@ -165,13 +217,69 @@ List<String> ParseEquation(String equation){
     } else if (equation[i] == "!"){
       AddNumberToStack();
       stack.add("!");
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "sinh"){
+      AddNumberToStack();
+      stack.add("sinh");
+      i += 3;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "cosh"){
+      AddNumberToStack();
+      stack.add("cosh");
+      i += 3;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "tanh"){
+      AddNumberToStack();
+      stack.add("tanh");
+      i += 3;
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "cotanh"){
+      AddNumberToStack();
+      stack.add("cotanh");
+      i += 5;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "coth"){
+      AddNumberToStack();
+      stack.add("cotanh");
+      i += 3;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "sech"){
+      AddNumberToStack();
+      stack.add("sech");
+      i += 3;
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "cosech"){
+      AddNumberToStack();
+      stack.add("cosech");
+      i += 5;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "csch"){
+      AddNumberToStack();
+      stack.add("cosech");
+      i += 3;
     } else if (equation.length > i+2 && equation.substring(i, i+3) == "sin"){
       AddNumberToStack();
       stack.add("sin");
       i += 2;
-    } else if (equation.length > i+2 && equation.substring(i, i+3) == "cos"){
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "cos" && !(equation.length > i+4 && equation.substring(i, i+5) == "cosec")){
       AddNumberToStack();
       stack.add("cos");
+      i += 2;
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "tan"){
+      AddNumberToStack();
+      stack.add("tan");
+      i += 2;
+    } else if ((equation.length > i+4 && equation.substring(i, i+5) == "cotan")){
+      AddNumberToStack();
+      stack.add("cotan");
+      i += 4;
+    } else if ((equation.length > i+2 && equation.substring(i, i+3) == "cot")){
+      AddNumberToStack();
+      stack.add("cotan");
+      i += 2;
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "sec"){
+      AddNumberToStack();
+      stack.add("sec");
+      i += 2;
+    } else if ((equation.length > i+4 && equation.substring(i, i+5) == "cosec")){
+      AddNumberToStack();
+      stack.add("cosec");
+      i += 4;
+    } else if ((equation.length > i+2 && equation.substring(i, i+3) == "csc")){
+      AddNumberToStack();
+      stack.add("cosec");
       i += 2;
     } else if (equation.length > i+2 && equation.substring(i, i+3) == "log"){
       AddNumberToStack();
@@ -185,17 +293,48 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("sqrt");
       i += 3;
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "abs"){
+      AddNumberToStack();
+      stack.add("abs");
+      i += 2;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "sign"){
+      AddNumberToStack();
+      stack.add("sign");
+      i += 3;
+    } else if (equation.length > i+4 && equation.substring(i, i+5) == "round"){
+      AddNumberToStack();
+      stack.add("round");
+      i += 4;
+    } else if (equation.length > i+4 && equation.substring(i, i+5) == "floor"){
+      AddNumberToStack();
+      stack.add("floor");
+      i += 4;
+    } else if (equation.length > i+3 && equation.substring(i, i+4) == "ceil"){
+      AddNumberToStack();
+      stack.add("ceil");
+      i += 3;
     } else if (equation[i].contains(new RegExp("[0-9.]"))){
       number += equation[i];
-    } else{
+    } else if (equation[i] == "i"){
       if (number == "-"){
-        number += equation[i];
+        number += "i";
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
-        number = equation[i];
+        number = "i";
       } else{
-        number = equation[i];
+        number = "i";
+      }
+      AddNumberToStack();
+    } else{
+      if (number == "-"){
+        number += "x";
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = "x";
+      } else{
+        number = "x";
       }
       AddNumberToStack();
     }
@@ -295,12 +434,14 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
     } else if (postfixStack[i] == "/"){
       VariablePolynom last = stack.removeLast();
       stack.add(stack.removeLast()/last);
+    } else{
+      throw UnsupportedError;
     }
     print("${postfixStack[i]} : $stack");
   }
   VariablePolynom polynom = stack.removeLast();
   for (var i = polynom.variables.length-1; i >= 0; i--){
-    if (polynom.variables[i].c == 0){
+    if (polynom.variables[i].c == 0 && polynom.variables.length > 1){
       polynom.variables.removeAt(i);
     }
   }
@@ -373,48 +514,108 @@ List<double> GetPolynomRoots(VariablePolynom polynom){
   GetRootsFromRange(-10.0, 10.0, 0.1);
   GetRootsFromRange(-10000.0, 10000.0, 100.0);
   for (var i = roots.length-1; i >= 0; i--){
-    if (polynom.Evaluate(roots[i]).abs() > 1){
+    if (!divisors.contains(roots[i]) && polynom.Evaluate(roots[i]).abs() > 0.6){
       roots.removeAt(i);
     }
   }
   return roots;
 }
 
-void PlotPolynomFunction(VariablePolynom polynom, List<double> roots){
+List<double> GetSecantRoots(List<String> postfixStack){
+  List<double> roots = new List<double>();
+  double SecantFrom(double r){
+    double z = r;
+    double lastz = r+0.1;
+    for (var i = 0; i < 1000; i++){
+      //x(i) = x(i-1) - (f(x(i-1)))*((x(i-1) - x(i-2))/(f(x(i-1)) - f(x(i-2))));
+      double tmp = z;
+      double fz = EvaluateFuncAt(postfixStack, z);
+      double flastz = EvaluateFuncAt(postfixStack, lastz);
+      if (fz - flastz == 0) break;
+      z = z-(fz)*((z-lastz)/(fz - flastz));
+      lastz = tmp;
+    }
+    if (!z.isFinite){
+      return null;
+    }
+    return z;
+  }
+  void GetRootsFromRange(double min, double max, double step){
+    for (double r = min; r <= max; r+=step){
+      double root = SecantFrom(r);
+      if (root == null) continue;
+      bool f = true;
+      for (var i = 0; i < roots.length; i++){
+        if ((root-roots[i]).abs() < 0.001){
+          f = false;
+          break;
+        }
+      }
+      if (f){
+        if ((root.round()-root).abs() < 0.000001){
+          roots.add(root.roundToDouble());
+        } else{
+          roots.add(root);
+        }
+      }
+    }
+  }
+  GetRootsFromRange(-10.0, 10.0, 1.0);
+  for (var i = roots.length-1; i >= 0; i--){
+    if (EvaluateFuncAt(postfixStack, roots[i]).abs() > 0.01){
+      roots.removeAt(i);
+    }
+  }
+  return roots;
+}
+
+void PlotPolynomFunction(VariablePolynom polynom){
   querySelector("#canvasresult").className = "resultitem";
   CanvasRenderingContext2D ctx = canvas.context2D;
+  VariablePolynom derivate = DerivatePolynom(polynom);
+  List<double> roots = GetPolynomRoots(derivate);
   roots.sort();
   double minX;
   double maxX;
   double minY;
   double maxY;
-  if (roots.length > 0){
+  if (eMinX != null){
+    minX = eMinX;
+    maxX = eMaxX;
+  } else if (roots.length > 1){
     minX = roots.first-2.0;
     maxX = roots.last+2.0;
-    if (polynom.Evaluate((maxX+minX)/3) > polynom.Evaluate(2*(maxX+minX)/3)){
-      maxY = polynom.Evaluate((maxX+minX)/3)+3.0;
-      minY = polynom.Evaluate(2*(maxX+minX)/3)-3.0;
-    } else{
-      minY = polynom.Evaluate((maxX+minX)/3)-3.0;
-      maxY = polynom.Evaluate(2*(maxX+minX)/3)+3.0;
-    }
-    if (polynom.Evaluate((maxX+minX)/2) > maxY) maxY = polynom.Evaluate((maxX+minX)/2)+3.0;
-    if (polynom.Evaluate((maxX+minX)/2) < minY) minY = polynom.Evaluate((maxX+minX)/2)-3.0;
+  } else if (roots.length == 1){
+    minX = roots.first-5.0;
+    maxX = roots.first+5.0;
   } else{
     minX = -5.0;
     maxX = 5.0;
-    if (polynom.Evaluate((maxX+minX)/3) > polynom.Evaluate(2*(maxX+minX)/3)){
-      maxY = polynom.Evaluate((maxX+minX)/3)+3.0;
-      minY = polynom.Evaluate(2*(maxX+minX)/3)-3.0;
-    } else{
-      minY = polynom.Evaluate((maxX+minX)/3)-3.0;
-      maxY = polynom.Evaluate(2*(maxX+minX)/3)+3.0;
-    }
-    if (polynom.Evaluate((maxX+minX)/2) > maxY) maxY = polynom.Evaluate((maxX+minX)/2)+3.0;
-    if (polynom.Evaluate((maxX+minX)/2) < minY) minY = polynom.Evaluate((maxX+minX)/2)-3.0;
   }
-  if (!minY.isFinite) minY = -5.0;
-  if (!maxY.isFinite) maxY = 5.0;
+  maxY = polynom.Evaluate(minX+2.0)+3.0;
+  minY = polynom.Evaluate(maxX-2.0)-3.0;
+  if (minY > maxY){
+    double tmp = minY;
+    minY = maxY;
+    maxY = tmp;
+  }
+  if (maxY < polynom.Evaluate((minX+maxX)/2)){
+    maxY = polynom.Evaluate((minX+maxX)/2) + 3.0;
+  }
+  if (minY > polynom.Evaluate((minX+maxX)/2)){
+    minY = polynom.Evaluate((minX+maxX)/2) - 3.0;
+  }
+  if (eMinY != null){
+    minY = eMinY;
+    maxY = eMaxY;
+  }
+  if ((minY.roundToDouble()-minY).abs() < 0.011){
+    minY = minY.roundToDouble();
+  }
+  if ((maxY.roundToDouble()-maxY).abs() < 0.011){
+    maxY = maxY.roundToDouble();
+  }
+  print("minX:$minX, maxX:$maxX > ${polynom.Evaluate(minX+2.0)} : ${polynom.Evaluate(maxX-2.0)} > minY:$minY, maxY:$maxY");
   ctx.fillStyle = "#111111";// = "#292929";
   ctx.strokeStyle = "white";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -448,7 +649,7 @@ void PlotPolynomFunction(VariablePolynom polynom, List<double> roots){
   }
   f = true;
   if (xorigin < 10 || xorigin > 400){
-    yorigin = 30.0;
+    xorigin = 40.0;
     f = false;
   }
   for (var i = minY; i < maxY; i+=(maxY-minY)~/10 > 1 ? (maxY-minY)~/10 : 1){
@@ -471,6 +672,130 @@ void PlotPolynomFunction(VariablePolynom polynom, List<double> roots){
     }
     ctx.beginPath();
     ctx.moveTo(i-1, 400-MapToRange(lastY, minY, maxY, 0.0, 400.0));
+    ctx.lineTo(i, 400-MapToRange(y, minY, maxY, 0.0, 400.0));
+    ctx.closePath();
+    ctx.stroke();
+    lastY = y;
+  }
+}
+
+double EvaluateFuncAt(List<String> postfixStack, double x){
+  List<String> stack = new List.from(postfixStack);
+  for (var i = 0; i < stack.length; i++) {
+    if (stack[i] == "x"){
+      stack[i] = x.toString();
+    }
+  }
+  return GetPostfixValue(stack);
+}
+
+void PlotFunction(List<String> postfixStack){
+  querySelector("#canvasresult").className = "resultitem";
+  CanvasRenderingContext2D ctx = canvas.context2D;
+  double minX;
+  double maxX;
+  double minY;
+  double maxY;
+  if (eMinX != null){
+    minX = eMinX;
+    maxX = eMaxX;
+  } else{
+    minX = -10.0;
+    maxX = 10.0;
+  }
+  if (!EvaluateFuncAt(postfixStack, minX).isFinite){
+    minX = -1.0;
+  }
+  if (!EvaluateFuncAt(postfixStack, maxX).isFinite){
+    maxX = pi-0.000001;
+  }
+  maxY = EvaluateFuncAt(postfixStack, minX+2.0)+3.0;
+  minY = EvaluateFuncAt(postfixStack, maxX-2.0)-3.0;
+  if (minY > maxY){
+    double tmp = minY;
+    minY = maxY;
+    maxY = tmp;
+  }
+  if (maxY < EvaluateFuncAt(postfixStack, (minX+maxX)/2)){
+    maxY = EvaluateFuncAt(postfixStack, (minX+maxX)/2) + 3.0;
+  }
+  if (minY > EvaluateFuncAt(postfixStack, (minX+maxX)/2)){
+    minY = EvaluateFuncAt(postfixStack, (minX+maxX)/2) - 3.0;
+  }
+  if (eMinY != null){
+    minY = eMinY;
+    maxY = eMaxY;
+  }
+  if ((minY.roundToDouble()-minY).abs() < 0.011){
+    minY = minY.roundToDouble();
+  }
+  if ((maxY.roundToDouble()-maxY).abs() < 0.011){
+    maxY = maxY.roundToDouble();
+  }
+  if (!maxY.isFinite){
+    maxY = minY < 0 ? minY.abs() : minY*2;
+  }
+  print("minX:$minX, maxX:$maxX > ${EvaluateFuncAt(postfixStack, minX+2.0)} : ${EvaluateFuncAt(postfixStack, maxX-2.0)} > minY:$minY, maxY:$maxY");
+  ctx.fillStyle = "#111111";// = "#292929";
+  ctx.strokeStyle = "white";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  double xorigin = MapToRange(0.0, minX, maxX, 0.0, 400.0);
+  double yorigin = MapToRange(0.0, minY, maxY, 0.0, 400.0);
+  ctx.beginPath();
+  ctx.moveTo(0, 400-yorigin);
+  ctx.lineTo(400, 400-yorigin);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(xorigin, 0);
+  ctx.lineTo(xorigin, 400);
+  ctx.closePath();
+  ctx.stroke();
+  ctx.fillStyle = "white";
+  ctx.textAlign = "center";
+  bool f = true;
+  if (yorigin < 10 || yorigin > 400){
+    yorigin = 22.0;
+    f = false;
+  }
+  for (var i = minX; i < maxX; i+=(maxX-minX)~/10 > 1 ? (maxX-minX)~/10 : 1){
+    if (i <= minX || i >= maxX || i == 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
+    ctx.lineTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+5);
+    ctx.fillText("${i.toStringAsFixed(2)}", MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+18);
+    ctx.closePath();
+    if (f) ctx.stroke();
+  }
+  f = true;
+  if (xorigin < 10 || xorigin > 400){
+    xorigin = 40.0;
+    f = false;
+  }
+  for (var i = minY; i < maxY; i+=(maxY-minY)~/10 > 1 ? (maxY-minY)~/10 : 1){
+    if (i <= minY || i >= maxY || i == 0) continue;
+    ctx.beginPath();
+    ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
+    ctx.lineTo(xorigin+5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
+    ctx.fillText("${i.toStringAsFixed(2)}", xorigin-20, 400-MapToRange(i, minY, maxY, 0.0, 400.0)+4);
+    ctx.closePath();
+    if (f) ctx.stroke();
+  }
+  ctx.fillStyle = "#818181";
+  double lastY;
+  for (var i = 0; i <= 400; i++){
+    double x = MapToRange(i.toDouble(), 0.0, 400.0, minX, maxX);
+    double y = EvaluateFuncAt(postfixStack, x);
+    if (lastY == null || !y.isFinite){
+      lastY = y;
+      continue;
+    }
+    ctx.beginPath();
+    if (!lastY.isFinite){
+      ctx.moveTo(i-1, 400-MapToRange(y, minY, maxY, 0.0, 400.0));
+    } else{
+      ctx.moveTo(i-1, 400-MapToRange(lastY, minY, maxY, 0.0, 400.0));
+    }
     ctx.lineTo(i, 400-MapToRange(y, minY, maxY, 0.0, 400.0));
     ctx.closePath();
     ctx.stroke();
@@ -522,6 +847,30 @@ double GetPostfixValue(List<String> postfixStack){
       stack.add(cos(stack.removeLast()));
     } else if (postfixStack[i] == "tan"){
       stack.add(tan(stack.removeLast()));
+    } else if (postfixStack[i] == "cotan"){
+      stack.add(1/tan(stack.removeLast()));
+    } else if (postfixStack[i] == "sec"){
+      stack.add(1/cos(stack.removeLast()));
+    } else if (postfixStack[i] == "cosec"){
+      stack.add(1/sin(stack.removeLast()));
+    } else if (postfixStack[i] == "sinh"){
+      double last = stack.removeLast();
+      stack.add((pow(E, last)-pow(E, -last))/2);
+    } else if (postfixStack[i] == "cosh"){
+      double last = stack.removeLast();
+      stack.add((pow(E, last)+pow(E, -last))/2);
+    } else if (postfixStack[i] == "tanh"){
+      double last = stack.removeLast();
+      stack.add((pow(E, last)-pow(E, -last))/(pow(E, last)+pow(E, -last)));
+    } else if (postfixStack[i] == "cotanh"){
+      double last = stack.removeLast();
+      stack.add(1/((pow(E, last)-pow(E, -last))/(pow(E, last)+pow(E, -last))));
+    } else if (postfixStack[i] == "sech"){
+      double last = stack.removeLast();
+      stack.add(1/((pow(E, last)+pow(E, -last))/2));
+    } else if (postfixStack[i] == "cosech"){
+      double last = stack.removeLast();
+      stack.add(1/((pow(E, last)-pow(E, -last))/2));
     } else if (postfixStack[i] == "sqrt"){
       stack.add(sqrt(stack.removeLast()));
     } else if (postfixStack[i] == "ln"){
@@ -551,7 +900,7 @@ double GetPostfixValue(List<String> postfixStack){
     } else if (postfixStack[i] == "round"){
       stack.add((stack.removeLast()).roundToDouble());
     }
-    print("${postfixStack[i]} : $stack");
+    //print("${postfixStack[i]} : $stack");
   }
   return stack.removeLast().toDouble();
 }
