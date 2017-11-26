@@ -13,10 +13,33 @@ double eMaxX;
 double eMaxY;
 
 void main(){
+  print(ArcSin(0.5));
   button = querySelector("#calculatebutton");
   canvas = querySelector("#canvas");
   print(canvas.className);
   button.addEventListener("click", ButtonClicked);
+  if (Uri.base.queryParameters['minx'] != "" && Uri.base.queryParameters['minx'] != null){
+    print("MinX: ${Uri.base.queryParameters['minx']}");
+    eMinX = num.parse(Uri.base.queryParameters['minx']);
+  }
+  if (Uri.base.queryParameters['miny'] != "" && Uri.base.queryParameters['miny'] != null){
+    print("MinY: ${Uri.base.queryParameters['miny']}");
+    eMinY = num.parse(Uri.base.queryParameters['miny']);
+  }
+  if (Uri.base.queryParameters['maxx'] != "" && Uri.base.queryParameters['maxx'] != null){
+    print("MaxX: ${Uri.base.queryParameters['maxx']}");
+    eMaxX = num.parse(Uri.base.queryParameters['maxx']);
+  }
+  if (Uri.base.queryParameters['maxy'] != "" && Uri.base.queryParameters['maxy'] != null){
+    print("MaxY: ${Uri.base.queryParameters['maxy']}");
+    eMaxY = num.parse(Uri.base.queryParameters['maxy']);
+  }
+  if (Uri.base.queryParameters['q'] != "" && Uri.base.queryParameters['q'] != null){
+    print("Equation from url: ${Uri.base.queryParameters['q']}");
+    InputElement element = querySelector("[name=equation]");
+    element.value = Uri.base.queryParameters['q'].replaceAll("|43", "+");
+    ButtonClicked("e");
+  }
 }
 
 void ButtonClicked(e){
@@ -391,9 +414,10 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
       double val = num.parse(postfixStack[i]);
       vp.variables.add(new Variable(val, 0.0));
       stack.add(vp);
+      value = vp;
     } catch (e){
       try{
-        if (postfixStack[i].contains(new RegExp("[A-Za-z]"))){
+        if (postfixStack[i].contains(new RegExp("[A-Za-z]")) && postfixStack[i].length == 1){
           VariablePolynom vp = new VariablePolynom();
           String toParse = postfixStack[i].replaceAll(new RegExp("[A-Za-z]"), "");
           if (toParse.length == 0){
@@ -402,12 +426,12 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
           double val = num.parse(toParse);
           vp.variables.add(new Variable(val, 1.0));
           stack.add(vp);
+          value = vp;
         }
       } catch (e){
       }
     }
     if (value != null){
-      stack.add(value);
     } else if (postfixStack[i] == "+"){
       VariablePolynom last = stack.removeLast();
       stack.add(stack.removeLast()+last);
@@ -435,6 +459,7 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
       VariablePolynom last = stack.removeLast();
       stack.add(stack.removeLast()/last);
     } else{
+      print(postfixStack[i]);
       throw UnsupportedError;
     }
     print("${postfixStack[i]} : $stack");
@@ -495,7 +520,7 @@ List<double> GetPolynomRoots(VariablePolynom polynom){
   }
   List<int> divisorsNum = NumDivisors(polynom.GetDegreeCoefficient(0).abs().toInt());
   List<double> divisors = new List<double>();
-  double highestCoefficient = polynom.GetHighestMonomial().c;
+  double highestCoefficient = polynom.GetHighestMonomial() == null ? 1.0 : polynom.GetHighestMonomial().c;
   for (var i = 0; i < divisorsNum.length; i++){
     divisors.add(divisorsNum[i].toDouble()/highestCoefficient);
     divisors.add(-divisorsNum[i].toDouble()/highestCoefficient);
@@ -531,7 +556,10 @@ List<double> GetSecantRoots(List<String> postfixStack){
       double tmp = z;
       double fz = EvaluateFuncAt(postfixStack, z);
       double flastz = EvaluateFuncAt(postfixStack, lastz);
-      if (fz - flastz == 0) break;
+      if (fz - flastz == 0){
+        
+        break;
+      }
       z = z-(fz)*((z-lastz)/(fz - flastz));
       lastz = tmp;
     }
@@ -564,6 +592,11 @@ List<double> GetSecantRoots(List<String> postfixStack){
   for (var i = roots.length-1; i >= 0; i--){
     if (EvaluateFuncAt(postfixStack, roots[i]).abs() > 0.01){
       roots.removeAt(i);
+    }
+  }
+  for (var i = roots.length-1; i >= 0; i--){
+    if (roots[i] != -roots[i] && EvaluateFuncAt(postfixStack, -roots[i]).abs() < 0.000001 && !roots.contains(-roots[i])){
+      roots.add(-roots[i]);
     }
   }
   return roots;
@@ -614,6 +647,10 @@ void PlotPolynomFunction(VariablePolynom polynom){
   }
   if ((maxY.roundToDouble()-maxY).abs() < 0.011){
     maxY = maxY.roundToDouble();
+  }
+  if (minY == maxY){
+    minY = -5.0;
+    maxY = 5.0;
   }
   print("minX:$minX, maxX:$maxX > ${polynom.Evaluate(minX+2.0)} : ${polynom.Evaluate(maxX-2.0)} > minY:$minY, maxY:$maxY");
   ctx.fillStyle = "#111111";// = "#292929";
@@ -726,11 +763,19 @@ void PlotFunction(List<String> postfixStack){
     minY = eMinY;
     maxY = eMaxY;
   }
+  if (minY > maxY){
+    double tmp = minY;
+    minY = maxY;
+    maxY = tmp;
+  }
   if ((minY.roundToDouble()-minY).abs() < 0.011){
     minY = minY.roundToDouble();
   }
   if ((maxY.roundToDouble()-maxY).abs() < 0.011){
     maxY = maxY.roundToDouble();
+  }
+  if (!minY.isFinite){
+    minY = maxY > 0 ? -maxY : maxY*2;
   }
   if (!maxY.isFinite){
     maxY = minY < 0 ? minY.abs() : minY*2;
@@ -832,15 +877,7 @@ double GetPostfixValue(List<String> postfixStack){
       double last = stack.removeLast();
       stack.add(stack.removeLast()%last);
     } else if (postfixStack[i] == "!"){
-      double fact(double val){
-        double res = 1.0;
-        for (var i = 2; i < val.round().abs(); i++) {
-          res *= i;
-        }
-        return res;
-        //TODO: Gamma function.
-      }
-      stack.add(fact(stack.removeLast()));
+      stack.add(Fact(stack.removeLast()));
     } else if (postfixStack[i] == "sin"){
       stack.add(sin(stack.removeLast()));
     } else if (postfixStack[i] == "cos"){

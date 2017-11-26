@@ -126,7 +126,11 @@ class VariablePolynom{
         highest = i;
       }
     }
-    return variables[highest];
+    if (variables.length > 0){
+      return variables[highest];
+    } else{
+      return null;
+    }
   }
 }
 
