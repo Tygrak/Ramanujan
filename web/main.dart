@@ -13,7 +13,6 @@ double eMaxX;
 double eMaxY;
 
 void main(){
-  print(ArcSin(0.5));
   button = querySelector("#calculatebutton");
   canvas = querySelector("#canvas");
   print(canvas.className);
@@ -240,6 +239,30 @@ List<String> ParseEquation(String equation){
     } else if (equation[i] == "!"){
       AddNumberToStack();
       stack.add("!");
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "arcsin"){
+      AddNumberToStack();
+      stack.add("arcsin");
+      i += 5;
+    } else if (equation.length > i+7 && equation.substring(i, i+8) == "arccosec"){
+      AddNumberToStack();
+      stack.add("arccosec");
+      i += 7;
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "arccos"){
+      AddNumberToStack();
+      stack.add("arccos");
+      i += 5;
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "arctan"){
+      AddNumberToStack();
+      stack.add("arctan");
+      i += 5;
+    } else if (equation.length > i+7 && equation.substring(i, i+8) == "arccotan"){
+      AddNumberToStack();
+      stack.add("arccotan");
+      i += 7;
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "arcsec"){
+      AddNumberToStack();
+      stack.add("arcsec");
+      i += 5;
     } else if (equation.length > i+3 && equation.substring(i, i+4) == "sinh"){
       AddNumberToStack();
       stack.add("sinh");
@@ -675,7 +698,7 @@ void PlotPolynomFunction(VariablePolynom polynom){
     yorigin = 22.0;
     f = false;
   }
-  for (var i = minX; i < maxX; i+=(maxX-minX)~/10 > 1 ? (maxX-minX)~/10 : 1){
+  for (var i = minX; i < maxX; i+=(maxX-minX)/10 > 0.1 ? (maxX-minX)/10 : 0.1){
     if (i <= minX || i >= maxX || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
@@ -689,7 +712,7 @@ void PlotPolynomFunction(VariablePolynom polynom){
     xorigin = 40.0;
     f = false;
   }
-  for (var i = minY; i < maxY; i+=(maxY-minY)~/10 > 1 ? (maxY-minY)~/10 : 1){
+  for (var i = minY; i < maxY; i+=(maxY-minY)/10 > 0.1 ? (maxY-minY)/10 : 0.1){
     if (i <= minY || i >= maxY || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
@@ -803,7 +826,7 @@ void PlotFunction(List<String> postfixStack){
     yorigin = 22.0;
     f = false;
   }
-  for (var i = minX; i < maxX; i+=(maxX-minX)~/10 > 1 ? (maxX-minX)~/10 : 1){
+  for (var i = minX; i < maxX; i+=(maxX-minX)/10 > 0.1 ? (maxX-minX)/10 : 0.1){
     if (i <= minX || i >= maxX || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
@@ -817,7 +840,7 @@ void PlotFunction(List<String> postfixStack){
     xorigin = 40.0;
     f = false;
   }
-  for (var i = minY; i < maxY; i+=(maxY-minY)~/10 > 1 ? (maxY-minY)~/10 : 1){
+  for (var i = minY; i < maxY; i+=(maxY-minY)/10 > 0.1 ? (maxY-minY)/10 : 0.1){
     if (i <= minY || i >= maxY || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
@@ -885,29 +908,35 @@ double GetPostfixValue(List<String> postfixStack){
     } else if (postfixStack[i] == "tan"){
       stack.add(tan(stack.removeLast()));
     } else if (postfixStack[i] == "cotan"){
-      stack.add(1/tan(stack.removeLast()));
+      stack.add(cotan(stack.removeLast()));
     } else if (postfixStack[i] == "sec"){
-      stack.add(1/cos(stack.removeLast()));
+      stack.add(sec(stack.removeLast()));
     } else if (postfixStack[i] == "cosec"){
-      stack.add(1/sin(stack.removeLast()));
+      stack.add(cosec(stack.removeLast()));
     } else if (postfixStack[i] == "sinh"){
-      double last = stack.removeLast();
-      stack.add((pow(E, last)-pow(E, -last))/2);
+      stack.add(sinh(stack.removeLast()));
     } else if (postfixStack[i] == "cosh"){
-      double last = stack.removeLast();
-      stack.add((pow(E, last)+pow(E, -last))/2);
+      stack.add(cosh(stack.removeLast()));
     } else if (postfixStack[i] == "tanh"){
-      double last = stack.removeLast();
-      stack.add((pow(E, last)-pow(E, -last))/(pow(E, last)+pow(E, -last)));
+      stack.add(tanh(stack.removeLast()));
     } else if (postfixStack[i] == "cotanh"){
-      double last = stack.removeLast();
-      stack.add(1/((pow(E, last)-pow(E, -last))/(pow(E, last)+pow(E, -last))));
+      stack.add(cotanh(stack.removeLast()));
     } else if (postfixStack[i] == "sech"){
-      double last = stack.removeLast();
-      stack.add(1/((pow(E, last)+pow(E, -last))/2));
+      stack.add(sech(stack.removeLast()));
     } else if (postfixStack[i] == "cosech"){
-      double last = stack.removeLast();
-      stack.add(1/((pow(E, last)-pow(E, -last))/2));
+      stack.add(cosech(stack.removeLast()));
+    } else if (postfixStack[i] == "arcsin"){
+      stack.add(arcsin(stack.removeLast()));
+    } else if (postfixStack[i] == "arccos"){
+      stack.add(arccos(stack.removeLast()));
+    } else if (postfixStack[i] == "arctan"){
+      stack.add(arctan(stack.removeLast()));
+    } else if (postfixStack[i] == "arccotan"){
+      stack.add(arccotan(stack.removeLast()));
+    } else if (postfixStack[i] == "arcsec"){
+      stack.add(arcsec(stack.removeLast()));
+    } else if (postfixStack[i] == "arccosec"){
+      stack.add(arccosec(stack.removeLast()));
     } else if (postfixStack[i] == "sqrt"){
       stack.add(sqrt(stack.removeLast()));
     } else if (postfixStack[i] == "ln"){
