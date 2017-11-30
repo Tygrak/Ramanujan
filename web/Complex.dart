@@ -1,13 +1,32 @@
 import 'dart:math';
+import 'mathExtensions.dart';
 
 class Complex{
   final double _r,_i;
  
   Complex(this._r,this._i);
+  Complex.from(double r) : _r = r, _i = 0.0;
   double get r => _r;
   double get i => _i;
   int get hashCode => ((17 * r) * 31 + i).floor();
-  String toString() => "($r,$i)";
+  String toString(){
+    String toPrint = "";
+    if (r != 0) toPrint += r.toString();
+    if (i > 0 && r != 0) toPrint += "+";
+    if (i != 0) toPrint += i.toString()+"i";
+    return toPrint;
+  }
+
+  double get Modulus{
+    return sqrt(r*r+i*i);
+  }
+
+  double get Argument{
+    return arctan(i/r);
+  }
+
+  ///The complex number 0+1*i
+  static Complex ione = new Complex(0.0, 1.0);
  
   Complex operator +(Complex other) => new Complex(r+other.r,i+other.i);
   Complex operator -(Complex other) => new Complex(r-other.r,i-other.i);
@@ -33,15 +52,25 @@ class Complex{
     return new Complex(r*constant, i*constant);
   }
   Complex sin (){
-    return (Pow(E, new Complex(0.0, 1.0)*this)-Pow(E, new Complex(0.0, -1.0)*this))/(new Complex(0.0, 1.0).timesConst(2));
+    return (DoubleToComplexPow(E, new Complex(0.0, 1.0)*this)-DoubleToComplexPow(E, new Complex(0.0, -1.0)*this))/(new Complex(0.0, 1.0).timesConst(2));
   }
   Complex cos (){
-    return (Pow(E, new Complex(0.0, 1.0)*this)+Pow(E, new Complex(0.0, -1.0)*this))/(new Complex(1.0, 0.0).timesConst(2));
+    return (DoubleToComplexPow(E, new Complex(0.0, 1.0)*this)+DoubleToComplexPow(E, new Complex(0.0, -1.0)*this))/(new Complex(1.0, 0.0).timesConst(2));
   }
   double abs() => r*r+i*i;
 }
 
-Complex Pow(double n, Complex toPow){
+Complex DoubleToComplexPow(double n, Complex toPow){
   //12^(3 + 2 I) = 1728 cos(2 log(12)) + 1728 i sin(2 log(12))
   return new Complex(cos(toPow.i * log(n)), sin(toPow.i * log(n))).timesConst(pow(n, toPow.r));
+}
+
+Complex Pow(Complex n, Complex toPow){
+  //e**(cln(r)−dθ)+i(dln(r)+cθ)
+  //exp((cln|a+bi|−darg(a+bi)))exp(i(carg(a+bi)+dln|a+bi|))
+  return DoubleToComplexPow(e, new Complex(toPow.r*log(n.Modulus)-toPow.i*n.Argument, toPow.r*n.Argument+toPow.i*log(n.Modulus)));
+}
+
+Complex Log(Complex n){
+  return new Complex(log(n.Modulus), n.Argument);
 }

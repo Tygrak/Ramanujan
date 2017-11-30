@@ -12,6 +12,8 @@ double eMinY;
 double eMaxX;
 double eMaxY;
 
+var stream;
+
 void main(){
   button = querySelector("#calculatebutton");
   canvas = querySelector("#canvas");
@@ -39,6 +41,11 @@ void main(){
     element.value = Uri.base.queryParameters['q'].replaceAll("|43", "+");
     ButtonClicked("e");
   }
+  window.onKeyDown.listen((KeyboardEvent ke){
+    if (ke.keyCode == KeyCode.ENTER) {
+      ButtonClicked("e");       
+    }   
+  });
 }
 
 void ButtonClicked(e){
@@ -83,51 +90,57 @@ void ButtonClicked(e){
   List<String> postfixStack = InfixToPostfix(infixStack);
   print("----------");
   try{
-    double expressionValue = GetPostfixValue(postfixStack);
+    Complex expressionValue = GetComplexPostfixValue(postfixStack);
     print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
   } catch (e){
     try{
-      VariablePolynom vp = SimplifyPostfix(postfixStack);
-      VariablePolynom deriv = DerivatePolynom(vp);
-      VariablePolynom deriv2 = DerivatePolynom(deriv);
-      List<double> roots = GetPolynomRoots(vp);
-      print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
-      PlotPolynomFunction(vp);
-      String rootsHtml = "";
-      for (var i = 0; i < roots.length; i++){
-        if (rootsHtml != "") rootsHtml += "<br>";
-        rootsHtml += "${roots[i]}";
-        print("root : ${roots[i]}");
-      }
-      if (roots.length == 0){
-        PageAddResult("Roots", "No roots found.");
-      } else if (roots.length == 1){
-        PageAddResult("Root", "${rootsHtml}");
-      } else{
-        PageAddResult("Roots", "${rootsHtml}");
-      }
-      if (deriv2.variables.length > 0) PageAddResult("Second Derivate", "$deriv2");
-      if (deriv.variables.length > 0) PageAddResult("Derivate", "$deriv");
-      PageAddResult("Simplified", "$vp");
-      print("Equation for 1:${vp.Evaluate(1.0)}");
-      print("Equation for 2:${vp.Evaluate(2.0)}");
+      double expressionValue = GetPostfixValue(postfixStack);
+      print("$infixStack -> $postfixStack -> $expressionValue");
+      PageAddResult("Result", "$expressionValue");
     } catch (e){
-      if (e.toString() != "UnsupportedError") print(e);
-      List<double> roots = GetSecantRoots(postfixStack);
-      PlotFunction(postfixStack);
-      String rootsHtml = "";
-      for (var i = 0; i < roots.length; i++){
-        if (rootsHtml != "") rootsHtml += "<br>";
-        rootsHtml += "${roots[i]}";
-        print("root : ${roots[i]}");
-      }
-      if (roots.length == 0){
-        PageAddResult("Roots", "No roots found.");
-      } else if (roots.length == 1){
-        PageAddResult("Root", "${rootsHtml}");
-      } else{
-        PageAddResult("Roots", "${rootsHtml}");
+      try{
+        VariablePolynom vp = SimplifyPostfix(postfixStack);
+        VariablePolynom deriv = DerivatePolynom(vp);
+        VariablePolynom deriv2 = DerivatePolynom(deriv);
+        List<double> roots = GetPolynomRoots(vp);
+        print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
+        PlotPolynomFunction(vp);
+        String rootsHtml = "";
+        for (var i = 0; i < roots.length; i++){
+          if (rootsHtml != "") rootsHtml += "<br>";
+          rootsHtml += "${roots[i]}";
+          print("root : ${roots[i]}");
+        }
+        if (roots.length == 0){
+          PageAddResult("Roots", "No roots found.");
+        } else if (roots.length == 1){
+          PageAddResult("Root", "${rootsHtml}");
+        } else{
+          PageAddResult("Roots", "${rootsHtml}");
+        }
+        if (deriv2.variables.length > 0) PageAddResult("Second Derivate", "$deriv2");
+        if (deriv.variables.length > 0) PageAddResult("Derivate", "$deriv");
+        PageAddResult("Simplified", "$vp");
+        print("Equation for 1:${vp.Evaluate(1.0)}");
+        print("Equation for 2:${vp.Evaluate(2.0)}");
+      } catch (e){
+        if (e.toString() != "UnsupportedError") print(e);
+        List<double> roots = GetSecantRoots(postfixStack);
+        PlotFunction(postfixStack);
+        String rootsHtml = "";
+        for (var i = 0; i < roots.length; i++){
+          if (rootsHtml != "") rootsHtml += "<br>";
+          rootsHtml += "${roots[i]}";
+          print("root : ${roots[i]}");
+        }
+        if (roots.length == 0){
+          PageAddResult("Roots", "No roots found.");
+        } else if (roots.length == 1){
+          PageAddResult("Root", "${rootsHtml}");
+        } else{
+          PageAddResult("Roots", "${rootsHtml}");
+        }
       }
     }
   }
@@ -969,6 +982,115 @@ double GetPostfixValue(List<String> postfixStack){
     //print("${postfixStack[i]} : $stack");
   }
   return stack.removeLast().toDouble();
+}
+
+Complex GetComplexPostfixValue(List<String> postfixStack){
+  Queue<Complex> stack = new Queue<Complex>();
+  for (var i = 0; i < postfixStack.length; i++){
+    Complex value;
+    try{
+      value = new Complex(num.parse(postfixStack[i]), 0.0);
+    } catch (e){
+    }
+    if (value != null){
+      stack.add(value);
+    } else if (postfixStack[i] == "i"){
+      stack.add(new Complex(0.0, 1.0));
+    } else if (postfixStack[i] == "+"){
+      Complex last = stack.removeLast();
+      stack.add(stack.removeLast()+last);
+    } else if (postfixStack[i] == "-"){
+      Complex last = stack.removeLast();
+      stack.add(stack.removeLast()-last);
+    } else if (postfixStack[i] == "*"){
+      Complex last = stack.removeLast();
+      stack.add(stack.removeLast()*last);
+    } else if (postfixStack[i] == "**"){
+      Complex last = stack.removeLast();
+      stack.add(Pow(stack.removeLast(), last));
+    } else if (postfixStack[i] == "/"){
+      Complex last = stack.removeLast();
+      stack.add(stack.removeLast()/last);
+    } /* else if (postfixStack[i] == "%"){
+      Complex last = stack.removeLast();
+      stack.add(stack.removeLast()%last);
+    } else if (postfixStack[i] == "!"){
+      stack.add(Fact(stack.removeLast()));
+    }*/ else if (postfixStack[i] == "sin"){
+      stack.add(stack.removeLast().sin());
+    } else if (postfixStack[i] == "cos"){
+      stack.add(stack.removeLast().cos());
+    } else if (postfixStack[i] == "tan"){
+      Complex c = stack.removeLast();
+      stack.add(c.sin()/c.cos());
+    } else if (postfixStack[i] == "cotan"){
+      Complex c = stack.removeLast();
+      stack.add(c.cos()/c.sin());
+    } else if (postfixStack[i] == "sec"){
+      stack.add(new Complex.from(1.0)/stack.removeLast().cos());
+    } else if (postfixStack[i] == "cosec"){
+      stack.add(new Complex.from(1.0)/stack.removeLast().sin());
+    } /*else if (postfixStack[i] == "sinh"){
+      stack.add(sinh(stack.removeLast()));
+    } else if (postfixStack[i] == "cosh"){
+      stack.add(cosh(stack.removeLast()));
+    } else if (postfixStack[i] == "tanh"){
+      stack.add(tanh(stack.removeLast()));
+    } else if (postfixStack[i] == "cotanh"){
+      stack.add(cotanh(stack.removeLast()));
+    } else if (postfixStack[i] == "sech"){
+      stack.add(sech(stack.removeLast()));
+    } else if (postfixStack[i] == "cosech"){
+      stack.add(cosech(stack.removeLast()));
+    } else if (postfixStack[i] == "arcsin"){
+      stack.add(arcsin(stack.removeLast()));
+    } else if (postfixStack[i] == "arccos"){
+      stack.add(arccos(stack.removeLast()));
+    } else if (postfixStack[i] == "arctan"){
+      stack.add(arctan(stack.removeLast()));
+    } else if (postfixStack[i] == "arccotan"){
+      stack.add(arccotan(stack.removeLast()));
+    } else if (postfixStack[i] == "arcsec"){
+      stack.add(arcsec(stack.removeLast()));
+    } else if (postfixStack[i] == "arccosec"){
+      stack.add(arccosec(stack.removeLast()));
+    }*/ else if (postfixStack[i] == "sqrt"){
+      stack.add(Pow(stack.removeLast(), new Complex.from(1/2)));
+    } else if (postfixStack[i] == "ln"){
+      stack.add(Log(stack.removeLast()));
+    } else if (postfixStack[i] == "log"){
+      stack.add(Log(stack.removeLast())/Log(new Complex.from(10.0)));
+    } /*else if (postfixStack[i] == "abs"){
+      double last = stack.removeLast();
+      if (last > 0){
+        stack.add(last);
+      } else{
+        stack.add(-last);
+      }
+    } else if (postfixStack[i] == "sign"){
+      double last = stack.removeLast();
+      if (last > 0){
+        stack.add(1);
+      } else if (last < 0){
+        stack.add(-1);
+      } else{
+        stack.add(0);
+      }
+    } else if (postfixStack[i] == "floor"){
+      stack.add((stack.removeLast()).floorToDouble());
+    } else if (postfixStack[i] == "ceil"){
+      stack.add((stack.removeLast()).ceilToDouble());
+    } else if (postfixStack[i] == "round"){
+      stack.add((stack.removeLast()).roundToDouble());
+    }*/ else{
+      throw UnimplementedError;
+    }
+    //print("${postfixStack[i]} : $stack");
+  }
+  if (stack.length > 1){
+    throw Error;
+  }
+  return stack.removeLast();
 }
 
 int GetOpPrecedence(String op){
