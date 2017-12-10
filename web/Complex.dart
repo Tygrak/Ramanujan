@@ -11,6 +11,7 @@ class Complex{
   int get hashCode => ((17 * r) * 31 + i).floor();
   String toString(){
     String toPrint = "";
+    if (r == 0 && i == 0) return "0";
     if (r != 0) toPrint += r.toString();
     if (i > 0 && r != 0) toPrint += "+";
     if (i != 0) toPrint += i.toString()+"i";
@@ -57,7 +58,6 @@ class Complex{
   Complex cos (){
     return (DoubleToComplexPow(E, new Complex(0.0, 1.0)*this)+DoubleToComplexPow(E, new Complex(0.0, -1.0)*this))/(new Complex(1.0, 0.0).timesConst(2));
   }
-  double abs() => r*r+i*i;
 }
 
 Complex DoubleToComplexPow(double n, Complex toPow){

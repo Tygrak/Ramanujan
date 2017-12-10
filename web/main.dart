@@ -42,9 +42,22 @@ void main(){
     ButtonClicked("e");
   }
   window.onKeyDown.listen((KeyboardEvent ke){
-    if (ke.keyCode == KeyCode.ENTER) {
+    if (ke.keyCode == KeyCode.ENTER){
       ButtonClicked("e");       
-    }   
+    } else if (ke.keyCode == KeyCode.F1){
+      Element results = querySelector("#resultitems");
+      if (!results.innerHtml.contains("Equation Link")){
+        InputElement element = querySelector("[name=equation]");
+        String link = "http://ramanujan.wz.cz/?q=" + element.value.replaceAll("+", "|43");
+        if (eMinX != null){
+          link += "&minx=$eMinX&maxx=$eMaxX";
+        }
+        if (eMinY != null){
+          link += "&miny=$eMinY&maxy=$eMaxY";
+        }
+        PageAddResult("Equation Link", link);
+      }
+    }
   });
 }
 
@@ -55,7 +68,6 @@ void ButtonClicked(e){
   if (equation.toLowerCase().startsWith("xfrom ") || equation.toLowerCase().startsWith("minx ")){
     List<String> parts = equation.toLowerCase().split(" ");
     eMinX = null;
-    eMaxX = null;
     for (var i = 0; i < parts.length; i++){
       double val = num.parse(parts[i], (String s) => null);
       print("${parts[i]} : $val");
@@ -68,10 +80,21 @@ void ButtonClicked(e){
     print("MinX set to $eMinX, maxX set to $eMaxX");
     PageAddResult("Result", "MinX set to $eMinX, maxX set to $eMaxX.");
     return;
+  } else if (equation.toLowerCase().startsWith("xto ") || equation.toLowerCase().startsWith("maxx ")){
+    List<String> parts = equation.toLowerCase().split(" ");
+    for (var i = 0; i < parts.length; i++){
+      double val = num.parse(parts[i], (String s) => null);
+      print("${parts[i]} : $val");
+      if (val != null){
+        eMaxX = val;
+      }
+    }
+    print("MinX set to $eMinX, maxX set to $eMaxX");
+    PageAddResult("Result", "MinX set to $eMinX, maxX set to $eMaxX.");
+    return;
   } else if (equation.toLowerCase().startsWith("yfrom ") || equation.toLowerCase().startsWith("miny ")){
     List<String> parts = equation.toLowerCase().split(" ");
     eMinY = null;
-    eMaxY = null;
     for (var i = 0; i < parts.length; i++){
       double val = num.parse(parts[i], (String s) => null);
       print("${parts[i]} : $val");
@@ -79,6 +102,18 @@ void ButtonClicked(e){
         if (eMinY == null) eMinY = val;
         else if (eMaxY == null) eMaxY = val;
         else break;
+      }
+    }
+    print("MinY set to $eMinY, maxY set to $eMaxY");
+    PageAddResult("Result", "MinY set to $eMinY, maxY set to $eMaxY.");
+    return;
+  } else if (equation.toLowerCase().startsWith("yto ") || equation.toLowerCase().startsWith("maxy ")){
+    List<String> parts = equation.toLowerCase().split(" ");
+    for (var i = 0; i < parts.length; i++){
+      double val = num.parse(parts[i], (String s) => null);
+      print("${parts[i]} : $val");
+      if (val != null){
+        eMaxY = val;
       }
     }
     print("MinY set to $eMinY, maxY set to $eMaxY");
@@ -1090,7 +1125,14 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
   if (stack.length > 1){
     throw Error;
   }
-  return stack.removeLast();
+  Complex comp = stack.removeLast();
+  if ((comp.r.roundToDouble()-comp.r).abs() < 0.0000000001){
+    comp = new Complex(comp.r.roundToDouble(), comp.i);
+  }
+  if ((comp.i.roundToDouble()-comp.i).abs() < 0.0000000001){
+    comp = new Complex(comp.r, comp.i.roundToDouble());
+  }
+  return comp;
 }
 
 int GetOpPrecedence(String op){
