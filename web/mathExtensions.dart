@@ -28,24 +28,6 @@ double Fact(double val){
   //TODO: Gamma function.
 }
 
-double OddFact(double val){
-  double res = 1.0;
-  for (var i = 3; i < val.round().abs(); i+=2) {
-    res *= i;
-  }
-  return res;
-  //TODO: Gamma function.
-}
-
-double EvenFact(double val){
-  double res = 1.0;
-  for (var i = 2; i < val.round().abs(); i+=2) {
-    res *= i;
-  }
-  return res;
-  //TODO: Gamma function.
-}
-
 double cotan(double x){
   return 1/tan(x);
 }

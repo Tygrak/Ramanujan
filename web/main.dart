@@ -517,9 +517,16 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
       VariablePolynom slast = stack.removeLast();
       VariablePolynom res = new VariablePolynom();
       res.variables = new List.from(slast.variables);
-      if ((last.variables[0].c).round() == 0){
+      if (last.GetHighestMonomial().degree > 0){
+        throw UnsupportedError;
+      }
+      if (last.variables[0].c == 0){
         res = new VariablePolynom();
         res.variables.add(new Variable(1.0, 0.0));
+      } else if (last.variables[0].c < 0){
+        for (var j = 0; j < (last.variables[0].c.abs()+1).round(); j++) {
+          res = res / slast;
+        }
       } else{
         for (var j = 0; j < (last.variables[0].c-1).round(); j++) {
           res = res * slast;
@@ -528,7 +535,11 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
       stack.add(res);
     } else if (postfixStack[i] == "/"){
       VariablePolynom last = stack.removeLast();
-      stack.add(stack.removeLast()/last);
+      VariablePolynom slast = stack.removeLast();
+      if (slast.GetHighestMonomial().degree == 0){
+        throw UnsupportedError;
+      }
+      stack.add(slast/last);
     } else{
       print(postfixStack[i]);
       throw UnsupportedError;
@@ -713,15 +724,15 @@ void PlotPolynomFunction(VariablePolynom polynom){
     minY = eMinY;
     maxY = eMaxY;
   }
-  if ((minY.roundToDouble()-minY).abs() < 0.011){
-    minY = minY.roundToDouble();
-  }
-  if ((maxY.roundToDouble()-maxY).abs() < 0.011){
-    maxY = maxY.roundToDouble();
-  }
+  if (!minY.isFinite) minY = -5.0;
+  if (!maxY.isFinite) maxY =  5.0;
   if (minY == maxY){
     minY = -5.0;
     maxY = 5.0;
+  }
+  if (maxY-minY > 4){
+    minY = minY.roundToDouble();
+    maxY = maxY.roundToDouble();
   }
   print("minX:$minX, maxX:$maxX > ${polynom.Evaluate(minX+2.0)} : ${polynom.Evaluate(maxX-2.0)} > minY:$minY, maxY:$maxY");
   ctx.fillStyle = "#111111";// = "#292929";
@@ -746,7 +757,17 @@ void PlotPolynomFunction(VariablePolynom polynom){
     yorigin = 22.0;
     f = false;
   }
-  for (var i = minX; i < maxX; i+=(maxX-minX)/10 > 0.1 ? (maxX-minX)/10 : 0.1){
+  double stepSize;
+  print("Plot range: ${(maxX-minX).round()}");
+  if ((maxX-minX).round() == 10){
+    stepSize = 1.0;
+  } else if ((maxX-minX).round() == 20){
+    stepSize = 2.0;
+  } else {
+    stepSize = ((maxX-minX)/2).floor()*0.25 > 0.25 ? ((maxX-minX)/2).floor()*0.25 : 0.25;
+  }
+  if (stepSize > 1.0) stepSize = stepSize.roundToDouble();
+  for (var i = minX; i < maxX; i += stepSize){
     if (i <= minX || i >= maxX || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
@@ -760,7 +781,9 @@ void PlotPolynomFunction(VariablePolynom polynom){
     xorigin = 40.0;
     f = false;
   }
-  for (var i = minY; i < maxY; i+=(maxY-minY)/10 > 0.1 ? (maxY-minY)/10 : 0.1){
+  stepSize = ((maxY-minY)/2).floor()*0.25 > 0.25 ? ((maxY-minY)/2).floor()*0.25 : 0.25;
+  if (stepSize > 1.0) stepSize = stepSize.roundToDouble();
+  for (var i = minY; i < maxY; i += stepSize){
     if (i <= minY || i >= maxY || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
@@ -774,6 +797,11 @@ void PlotPolynomFunction(VariablePolynom polynom){
   for (var i = 0; i <= 400; i++){
     double x = MapToRange(i.toDouble(), 0.0, 400.0, minX, maxX);
     double y = polynom.Evaluate(x);
+    //print("$x : $y");
+    if (!y.isFinite){
+      lastY = null;
+      continue;
+    }
     if (lastY == null){
       lastY = y;
       continue;
@@ -874,7 +902,17 @@ void PlotFunction(List<String> postfixStack){
     yorigin = 22.0;
     f = false;
   }
-  for (var i = minX; i < maxX; i+=(maxX-minX)/10 > 0.1 ? (maxX-minX)/10 : 0.1){
+  double stepSize;
+  print("Plot range: ${(maxX-minX).round()}");
+  if ((maxX-minX).round() == 10){
+    stepSize = 1.0;
+  } else if ((maxX-minX).round() == 20){
+    stepSize = 2.0;
+  } else {
+    stepSize = ((maxX-minX)/2).floor()*0.25 > 0.25 ? ((maxX-minX)/2).floor()*0.25 : 0.25;
+  }
+  if (stepSize > 1.0) stepSize = stepSize.roundToDouble();
+  for (var i = minX; i < maxX; i += stepSize){
     if (i <= minX || i >= maxX || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
@@ -888,7 +926,9 @@ void PlotFunction(List<String> postfixStack){
     xorigin = 40.0;
     f = false;
   }
-  for (var i = minY; i < maxY; i+=(maxY-minY)/10 > 0.1 ? (maxY-minY)/10 : 0.1){
+  stepSize = ((maxY-minY)/2).floor()*0.25 > 0.25 ? ((maxY-minY)/2).floor()*0.25 : 0.25;
+  if (stepSize > 1.0) stepSize = stepSize.roundToDouble();
+  for (var i = minY; i < maxY; i += stepSize){
     if (i <= minY || i >= maxY || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
