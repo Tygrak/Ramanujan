@@ -22,6 +22,10 @@ class Complex{
     return sqrt(r*r+i*i);
   }
 
+  double get ModulusSquared{
+    return r*r+i*i;
+  }
+
   double get Argument{
     return arctan(i/r);
   }
@@ -66,9 +70,21 @@ Complex DoubleToComplexPow(double n, Complex toPow){
 }
 
 Complex Pow(Complex n, Complex toPow){
-  //e**(cln(r)−dθ)+i(dln(r)+cθ)
-  //exp((cln|a+bi|−darg(a+bi)))exp(i(carg(a+bi)+dln|a+bi|))
-  return DoubleToComplexPow(e, new Complex(toPow.r*log(n.Modulus)-toPow.i*n.Argument, toPow.r*n.Argument+toPow.i*log(n.Modulus)));
+  //(2+3i)**(4+5i)
+  //(mod(n)**2)*e**(-5*arg(n))*cos((5*log(mod(n))/2+4*arg(n)))
+  //pow(n.Modulus, (toPow.r/2))*pow(e, -toPow.i*n.Argument)*cos((toPow.i*log(n.Modulus))/2+toPow.r*n.Argument)
+  //print("pow: ${pow(n.ModulusSquared, toPow.r/2)}*e**(${-toPow.i}*${n.Argument})*cos((${toPow.i}*log(${n.ModulusSquared}))/2+${toPow.r}*${n.Argument})");
+  double x = pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument);
+  Complex val = new Complex(x*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument), x*sin((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument));
+  //Complex val = DoubleToComplexPow(e, new Complex(toPow.r*log(n.Modulus)-toPow.i*n.Argument, toPow.r*n.Argument+toPow.i*log(n.Modulus)));
+  if (toPow.i == 0.0 && toPow.r % 1 != 0 && (toPow.r*2) % 1 == 0 && n.r < 0.0){
+    val = new Complex(0.0, val.r);
+  }
+  return val;
+}
+
+Complex Sqrt(Complex n){
+  return Pow(n, new Complex.from(0.5));
 }
 
 Complex Log(Complex n){

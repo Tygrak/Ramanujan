@@ -407,6 +407,14 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("ceil");
       i += 3;
+    } else if (equation.length > i+7 && equation.substring(i, i+8) == "argument"){
+      AddNumberToStack();
+      stack.add("arg");
+      i += 7;
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "arg"){
+      AddNumberToStack();
+      stack.add("arg");
+      i += 2;
     } else if (equation[i].contains(new RegExp("[0-9.]"))){
       number += equation[i];
     } else if (equation[i] == "i"){
@@ -1082,7 +1090,12 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
       stack.add(stack.removeLast()*last);
     } else if (postfixStack[i] == "**"){
       Complex last = stack.removeLast();
-      stack.add(Pow(stack.removeLast(), last));
+      Complex slast = stack.removeLast();
+      if (last.i == 0.0 && slast.i == 0.0 && ((last.r % 1) == 0 || slast.r >= 0.0)){
+        stack.add(new Complex.from(pow(slast.r, last.r)));
+      } else{
+        stack.add(Pow(slast, last));
+      }
     } else if (postfixStack[i] == "/"){
       Complex last = stack.removeLast();
       stack.add(stack.removeLast()/last);
@@ -1130,19 +1143,32 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
     } else if (postfixStack[i] == "arccosec"){
       stack.add(arccosec(stack.removeLast()));
     }*/ else if (postfixStack[i] == "sqrt"){
-      stack.add(Pow(stack.removeLast(), new Complex.from(1/2)));
-    } else if (postfixStack[i] == "ln"){
-      stack.add(Log(stack.removeLast()));
-    } else if (postfixStack[i] == "log"){
-      stack.add(Log(stack.removeLast())/Log(new Complex.from(10.0)));
-    } /*else if (postfixStack[i] == "abs"){
-      double last = stack.removeLast();
-      if (last > 0){
-        stack.add(last);
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        stack.add(new Complex.from(sqrt(last.r)));
       } else{
-        stack.add(-last);
+        stack.add(Sqrt(stack.removeLast()));
       }
-    } else if (postfixStack[i] == "sign"){
+      //stack.add(Sqrt(stack.removeLast()));
+    } else if (postfixStack[i] == "ln"){
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        stack.add(new Complex.from(log(last.r)));
+      } else{
+        stack.add(Log(stack.removeLast()));
+      }
+    } else if (postfixStack[i] == "log"){
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        stack.add(new Complex.from(log(last.r)/log(10.0)));
+      } else{
+        stack.add(Log(stack.removeLast())/Log(new Complex.from(10.0)));
+      }
+    } else if (postfixStack[i] == "abs"){
+      stack.add(new Complex.from(stack.removeLast().Modulus));
+    } else if (postfixStack[i] == "arg"){
+      stack.add(new Complex.from(stack.removeLast().Argument));
+    } /*else if (postfixStack[i] == "sign"){
       double last = stack.removeLast();
       if (last > 0){
         stack.add(1);

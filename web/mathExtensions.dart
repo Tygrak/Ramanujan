@@ -95,9 +95,9 @@ double arctan(double x){
   double b = -pi/2+0.0000001;
   for (var i = 0; i < 100; i++) {
     if ((tan(a)-x).abs() < (tan(b)-x).abs()){
-      b = (a+b*2)/3;
+      b = (a+b*6)/7;
     } else{
-      a = (a*2+b)/3;
+      a = (a*6+b)/7;
     }
   }
   return a;
@@ -108,9 +108,9 @@ double arccotan(double x){
   double b = pi-0.0000001;
   for (var i = 0; i < 100; i++) {
     if ((cotan(a)-x).abs() < (cotan(b)-x).abs()){
-      b = (a+b*2)/3;
+      b = (a+b*6)/7;
     } else{
-      a = (a*2+b)/3;
+      a = (a*6+b)/7;
     }
   }
   return a;
