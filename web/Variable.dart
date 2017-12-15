@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'Complex.dart';
 
 class VariablePolynom{
   List<Variable> variables = new List<Variable>();
@@ -106,6 +107,14 @@ class VariablePolynom{
     double res = 0.0;
     for (var i = 0; i < variables.length; i++){
       res += variables[i].c*pow(variableValue, variables[i].degree);
+    }
+    return res;
+  }
+
+  Complex ComplexEvaluate(Complex variableValue){
+    Complex res = Complex.zero;
+    for (var i = 0; i < variables.length; i++){
+      res += Pow(variableValue, new Complex.from(variables[i].degree)).timesConst(variables[i].c);
     }
     return res;
   }

@@ -14,7 +14,9 @@ class Complex{
     if (r == 0 && i == 0) return "0";
     if (r != 0) toPrint += r.toString();
     if (i > 0 && r != 0) toPrint += "+";
-    if (i != 0) toPrint += i.toString()+"i";
+    if (i == 1) toPrint += "i";
+    else if (i == -1) toPrint += "-i";
+    else if (i != 0) toPrint += i.toString()+"i";
     return toPrint;
   }
 
@@ -27,18 +29,35 @@ class Complex{
   }
 
   double get Argument{
-    return arctan(i/r);
+    if (r > 0.0){
+      return arctan(i/r);
+    } else{
+      return pi+arctan(i/r);
+    }
+  }
+
+  Complex get Sign{
+    return this/(new Complex.from(Modulus));
+  }
+
+  bool get isFinite{
+    if (r.isFinite && i.isFinite) return true;
+    else return false;
   }
 
   ///The complex number 0+1*i
   static Complex ione = new Complex(0.0, 1.0);
+  ///The complex number 1+0*i
+  static Complex one = new Complex(1.0, 0.0);
+  ///The complex number 0+0*i
+  static Complex zero = new Complex(0.0, 0.0);
  
   Complex operator +(Complex other) => new Complex(r+other.r,i+other.i);
   Complex operator -(Complex other) => new Complex(r-other.r,i-other.i);
   Complex operator *(Complex other) => new Complex(r*other.r-i*other.i,r*other.i+other.r*i);
   Complex operator /(Complex other) => _Divide(other);
   bool operator ==(Complex other) => (r == other.r) && (i == other.i);
-  Complex _Divide (Complex other){
+  Complex _Divide(Complex other){
     double temp = other.r*other.r + other.i*other.i;
     if (temp == 0){
       //return new Complex(0.0, 0.0);
@@ -46,21 +65,31 @@ class Complex{
     }
     return new Complex((r*other.r + i*other.i)/temp, (i*other.r - r*other.i)/temp);
   }
-  Complex pow (int toPow){
+  Complex powint(int toPow){
     Complex val = this;
-    for (var i = 0; i < toPow; i++) {
+    for (var i = 1; i < toPow; i++) {
       val = val * this;
     }
     return val;
   }
-  Complex timesConst (num constant){
+  Complex timesConst(num constant){
     return new Complex(r*constant, i*constant);
   }
-  Complex sin (){
+  Complex sin(){
     return (DoubleToComplexPow(E, new Complex(0.0, 1.0)*this)-DoubleToComplexPow(E, new Complex(0.0, -1.0)*this))/(new Complex(0.0, 1.0).timesConst(2));
   }
-  Complex cos (){
+  Complex cos(){
     return (DoubleToComplexPow(E, new Complex(0.0, 1.0)*this)+DoubleToComplexPow(E, new Complex(0.0, -1.0)*this))/(new Complex(1.0, 0.0).timesConst(2));
+  }
+
+  Complex round(){
+    return new Complex(r.roundToDouble(), i.roundToDouble());
+  }
+  Complex floor(){
+    return new Complex(r.floorToDouble(), i.floorToDouble());
+  }
+  Complex ceil(){
+    return new Complex(r.ceilToDouble(), i.ceilToDouble());
   }
 }
 
@@ -72,14 +101,12 @@ Complex DoubleToComplexPow(double n, Complex toPow){
 Complex Pow(Complex n, Complex toPow){
   //(2+3i)**(4+5i)
   //(mod(n)**2)*e**(-5*arg(n))*cos((5*log(mod(n))/2+4*arg(n)))
-  //pow(n.Modulus, (toPow.r/2))*pow(e, -toPow.i*n.Argument)*cos((toPow.i*log(n.Modulus))/2+toPow.r*n.Argument)
+  //pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument)*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument)
   //print("pow: ${pow(n.ModulusSquared, toPow.r/2)}*e**(${-toPow.i}*${n.Argument})*cos((${toPow.i}*log(${n.ModulusSquared}))/2+${toPow.r}*${n.Argument})");
+  if (toPow == Complex.one) return n;
   double x = pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument);
   Complex val = new Complex(x*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument), x*sin((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument));
   //Complex val = DoubleToComplexPow(e, new Complex(toPow.r*log(n.Modulus)-toPow.i*n.Argument, toPow.r*n.Argument+toPow.i*log(n.Modulus)));
-  if (toPow.i == 0.0 && toPow.r % 1 != 0 && (toPow.r*2) % 1 == 0 && n.r < 0.0){
-    val = new Complex(0.0, val.r);
-  }
   return val;
 }
 

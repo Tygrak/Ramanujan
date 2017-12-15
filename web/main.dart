@@ -126,6 +126,12 @@ void ButtonClicked(e){
   print("----------");
   try{
     Complex expressionValue = GetComplexPostfixValue(postfixStack);
+    if ((expressionValue.r.round()-expressionValue.r).abs() < 0.000005){
+      expressionValue = new Complex(expressionValue.r.roundToDouble(), expressionValue.i);
+    }
+    if ((expressionValue.i.round()-expressionValue.i).abs() < 0.000005){
+      expressionValue = new Complex(expressionValue.i.roundToDouble(), expressionValue.i);
+    }
     print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
   } catch (e){
@@ -139,9 +145,23 @@ void ButtonClicked(e){
         VariablePolynom deriv = DerivatePolynom(vp);
         VariablePolynom deriv2 = DerivatePolynom(deriv);
         List<double> roots = GetPolynomRoots(vp);
+        List<Complex> complexRoots = GetPolynomComplexRoots(vp);
         print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
         PlotPolynomFunction(vp);
         String rootsHtml = "";
+        for (var i = 0; i < complexRoots.length; i++){
+          if (rootsHtml != "") rootsHtml += "<br>";
+          rootsHtml += "${complexRoots[i]}";
+          print("complex root : ${complexRoots[i]}");
+        }
+        if (complexRoots.length == 0){
+          //PageAddResult("Complex roots", "No roots found.");
+        } else if (complexRoots.length == 1){
+          PageAddResult("Complex root", "${rootsHtml}");
+        } else{
+          PageAddResult("Complex roots", "${rootsHtml}");
+        }
+        rootsHtml = "";
         for (var i = 0; i < roots.length; i++){
           if (rootsHtml != "") rootsHtml += "<br>";
           rootsHtml += "${roots[i]}";
@@ -630,6 +650,66 @@ List<double> GetPolynomRoots(VariablePolynom polynom){
   GetRootsFromRange(-10000.0, 10000.0, 100.0);
   for (var i = roots.length-1; i >= 0; i--){
     if (!divisors.contains(roots[i]) && polynom.Evaluate(roots[i]).abs() > 0.6){
+      roots.removeAt(i);
+    }
+  }
+  return roots;
+}
+
+List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
+  List<Complex> roots = new List<Complex>();
+  VariablePolynom derivate = DerivatePolynom(polynom);
+  Complex NewtonFrom(Complex r){
+    Complex z = r;
+    for (var i = 0; i < 400; i++){
+      //print("$z -> ${polynom.ComplexEvaluate(z)}/${derivate.ComplexEvaluate(z)}");
+      z = z-((polynom.ComplexEvaluate(z))/(derivate.ComplexEvaluate(z)));
+    }
+    if (!z.isFinite){
+      return null;
+    }
+    return z;
+  }
+  void GetRootsFromRange(double i, double min, double max, double step){
+    for (double r = min; r <= max; r+=step){
+      Complex root = NewtonFrom(new Complex(r, i));
+      if (root == null) continue;
+      bool f = true;
+      for (var i = 0; i < roots.length; i++){
+        if ((root-roots[i]).ModulusSquared < 0.0001){
+          f = false;
+          break;
+        }
+      }
+      if (f){
+        if ((root.round()-root).ModulusSquared < 0.0001){
+          roots.add(root.round());
+        } else{
+          roots.add(root);
+        }
+      }
+      print("${new Complex(r, i)} -> $root");
+    }
+  }
+  //GetRootsFromRange(1.0, -1.0, 10.0, 100.5);
+  GetRootsFromRange(1.0, -10.0, 10.0, 0.5);
+  GetRootsFromRange(-1.0, -10.0, 10.0, 0.5);
+  GetRootsFromRange(-10.0, -10000.0, 10000.0, 2000.0);
+  GetRootsFromRange(10.0, -10000.0, 10000.0, 2000.0);
+  for (var i = roots.length-1; i >= 0; i--){
+    print(roots[i]);
+    if ((roots[i].round()-roots[i]).ModulusSquared < 0.01){
+      Complex val = roots.removeAt(i);
+      if (polynom.ComplexEvaluate(val.round()).ModulusSquared <= 0.001){
+        if (!roots.contains(val.round())) roots.add(val.round());
+      } else{
+        Complex valr = NewtonFrom(val.round());
+        if (!roots.contains(valr)) roots.add(valr);
+      }
+    }
+  }
+  for (var i = roots.length-1; i >= 0; i--){
+    if (roots[i] == null || roots[i].i.abs() <= 0.000001 || !roots[i].isFinite){
       roots.removeAt(i);
     }
   }
@@ -1168,16 +1248,9 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
       stack.add(new Complex.from(stack.removeLast().Modulus));
     } else if (postfixStack[i] == "arg"){
       stack.add(new Complex.from(stack.removeLast().Argument));
-    } /*else if (postfixStack[i] == "sign"){
-      double last = stack.removeLast();
-      if (last > 0){
-        stack.add(1);
-      } else if (last < 0){
-        stack.add(-1);
-      } else{
-        stack.add(0);
-      }
-    } else if (postfixStack[i] == "floor"){
+    } else if (postfixStack[i] == "sign"){
+      stack.add(stack.removeLast().Sign);
+    }/* else if (postfixStack[i] == "floor"){
       stack.add((stack.removeLast()).floorToDouble());
     } else if (postfixStack[i] == "ceil"){
       stack.add((stack.removeLast()).ceilToDouble());
