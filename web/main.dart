@@ -126,11 +126,12 @@ void ButtonClicked(e){
   print("----------");
   try{
     Complex expressionValue = GetComplexPostfixValue(postfixStack);
+    print("$infixStack -> $postfixStack -> $expressionValue");
     if ((expressionValue.r.round()-expressionValue.r).abs() < 0.000005){
       expressionValue = new Complex(expressionValue.r.roundToDouble(), expressionValue.i);
     }
     if ((expressionValue.i.round()-expressionValue.i).abs() < 0.000005){
-      expressionValue = new Complex(expressionValue.i.roundToDouble(), expressionValue.i);
+      expressionValue = new Complex(expressionValue.r, expressionValue.i.roundToDouble());
     }
     print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
@@ -145,7 +146,10 @@ void ButtonClicked(e){
         VariablePolynom deriv = DerivatePolynom(vp);
         VariablePolynom deriv2 = DerivatePolynom(deriv);
         List<double> roots = GetPolynomRoots(vp);
-        List<Complex> complexRoots = GetPolynomComplexRoots(vp);
+        List<Complex> complexRoots;
+        if (roots.length < vp.GetHighestMonomial().degree.round()){
+          complexRoots = GetPolynomComplexRoots(vp);
+        }
         print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
         PlotPolynomFunction(vp);
         String rootsHtml = "";
@@ -688,7 +692,7 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
           roots.add(root);
         }
       }
-      print("${new Complex(r, i)} -> $root");
+      //print("${new Complex(r, i)} -> $root");
     }
   }
   //GetRootsFromRange(1.0, -1.0, 10.0, 100.5);
@@ -1076,7 +1080,7 @@ double GetPostfixValue(List<String> postfixStack){
       double last = stack.removeLast();
       stack.add(stack.removeLast()%last);
     } else if (postfixStack[i] == "!"){
-      stack.add(Fact(stack.removeLast()));
+      stack.add(fact(stack.removeLast()));
     } else if (postfixStack[i] == "sin"){
       stack.add(sin(stack.removeLast()));
     } else if (postfixStack[i] == "cos"){
@@ -1182,9 +1186,9 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
     } /* else if (postfixStack[i] == "%"){
       Complex last = stack.removeLast();
       stack.add(stack.removeLast()%last);
-    } else if (postfixStack[i] == "!"){
-      stack.add(Fact(stack.removeLast()));
-    }*/ else if (postfixStack[i] == "sin"){
+    }*/ else if (postfixStack[i] == "!"){
+      stack.add(Gamma(stack.removeLast()+Complex.one));
+    } else if (postfixStack[i] == "sin"){
       stack.add(stack.removeLast().sin());
     } else if (postfixStack[i] == "cos"){
       stack.add(stack.removeLast().cos());

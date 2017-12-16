@@ -1,5 +1,4 @@
 import 'dart:math';
-import 'Complex.dart';
 
 List<int> NumDivisors(int number){
   List<int> divisors = new List<int>();
@@ -19,13 +18,41 @@ double MapToRange(double value, double min1, double max1, double min2, double ma
   return (value-min1)/(max1-min1) * (max2-min2) + min2;
 }
 
-double Fact(double val){
+double fact(double val){
   double res = 1.0;
-  for (var i = 2; i < val.round().abs(); i++) {
-    res *= i;
+  if (val % 1 == 0){
+    for (var i = 2; i <= val.round().abs(); i++) {
+      res *= i;
+    }
+  } else{
+    res = gamma(val+1);
   }
   return res;
-  //TODO: Gamma function.
+}
+
+double gamma(double val){
+  List<double> p = [676.5203681218851
+    ,-1259.1392167224028
+    ,771.32342877765313
+    ,-176.61502916214059
+    ,12.507343278686905
+    ,-0.13857109526572012
+    ,9.9843695780195716e-6
+    ,1.5056327351493116e-7
+    ];
+  double res;
+  if (val < 0.5){
+    res = pi / (sin(pi*val) * gamma(1-val));
+  } else{
+    val -= 1;
+    double x = 0.99999999999980993;
+    for (var i = 0; i < p.length; i++) {
+      x += p[i]/(val+i+1);
+    }
+    double t = val + p.length - 0.5;
+    res = sqrt(2*pi) * pow(t, (val+0.5)) * exp(-t) * x;
+  }
+  return res;
 }
 
 double cotan(double x){

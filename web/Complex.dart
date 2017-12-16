@@ -19,6 +19,26 @@ class Complex{
     else if (i != 0) toPrint += i.toString()+"i";
     return toPrint;
   }
+  String toStringAsFixed(int fractionDigits){
+    String toPrint = "";
+    if (r == 0 && i == 0) return "0";
+    if (r != 0) toPrint += r.toStringAsFixed(fractionDigits);
+    if (i > 0 && r != 0) toPrint += "+";
+    if (i == 1) toPrint += "i";
+    else if (i == -1) toPrint += "-i";
+    else if (i != 0) toPrint += i.toStringAsFixed(fractionDigits)+"i";
+    return toPrint;
+  }
+  String toStringAsPrecision(int precision){
+    String toPrint = "";
+    if (r == 0 && i == 0) return "0";
+    if (r != 0) toPrint += r.toStringAsPrecision(precision);
+    if (i > 0 && r != 0) toPrint += "+";
+    if (i == 1) toPrint += "i";
+    else if (i == -1) toPrint += "-i";
+    else if (i != 0) toPrint += i.toStringAsPrecision(precision)+"i";
+    return toPrint;
+  }
 
   double get Modulus{
     return sqrt(r*r+i*i);
@@ -51,6 +71,8 @@ class Complex{
   static Complex one = new Complex(1.0, 0.0);
   ///The complex number 0+0*i
   static Complex zero = new Complex(0.0, 0.0);
+
+  //Todo: Complex operator unary-() => new Complex(-r, -i);
  
   Complex operator +(Complex other) => new Complex(r+other.r,i+other.i);
   Complex operator -(Complex other) => new Complex(r-other.r,i-other.i);
@@ -98,12 +120,19 @@ Complex DoubleToComplexPow(double n, Complex toPow){
   return new Complex(cos(toPow.i * log(n)), sin(toPow.i * log(n))).timesConst(pow(n, toPow.r));
 }
 
+Complex Exp(Complex toPow){
+  return DoubleToComplexPow(e, toPow);
+}
+
 Complex Pow(Complex n, Complex toPow){
   //(2+3i)**(4+5i)
   //(mod(n)**2)*e**(-5*arg(n))*cos((5*log(mod(n))/2+4*arg(n)))
   //pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument)*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument)
   //print("pow: ${pow(n.ModulusSquared, toPow.r/2)}*e**(${-toPow.i}*${n.Argument})*cos((${toPow.i}*log(${n.ModulusSquared}))/2+${toPow.r}*${n.Argument})");
   if (toPow == Complex.one) return n;
+  else if (toPow.r % 1 == 0 && toPow.i == 0){
+    return n.powint(toPow.r.round());
+  }
   double x = pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument);
   Complex val = new Complex(x*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument), x*sin((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument));
   //Complex val = DoubleToComplexPow(e, new Complex(toPow.r*log(n.Modulus)-toPow.i*n.Argument, toPow.r*n.Argument+toPow.i*log(n.Modulus)));
@@ -116,4 +145,29 @@ Complex Sqrt(Complex n){
 
 Complex Log(Complex n){
   return new Complex(log(n.Modulus), n.Argument);
+}
+
+Complex Gamma(Complex val){
+  List<double> p = [676.5203681218851
+    ,-1259.1392167224028
+    ,771.32342877765313
+    ,-176.61502916214059
+    ,12.507343278686905
+    ,-0.13857109526572012
+    ,9.9843695780195716e-6
+    ,1.5056327351493116e-7
+    ];
+  Complex res;
+  if (val.r < 0.5){
+    res = new Complex.from(pi) / ((val.timesConst(pi)).sin() * Gamma(Complex.one-val));
+  } else{
+    val -= Complex.one;
+    Complex x = new Complex.from(0.99999999999980993);
+    for (var i = 0; i < p.length; i++) {
+      x += new Complex.from(p[i])/(val+new Complex.from(i.toDouble())+Complex.one);
+    }
+    Complex t = val + new Complex.from(p.length.toDouble()) - new Complex.from(0.5);
+    res = Pow(t, (val+new Complex.from(0.5))).timesConst(sqrt(2*pi)) * Exp(t.timesConst(-1)) * x;
+  }
+  return res;
 }
