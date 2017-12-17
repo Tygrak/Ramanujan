@@ -230,7 +230,7 @@ void PageAddResult(String type, String value){
 }
 
 List<String> ParseEquation(String equation){
-  equation = equation.replaceAll(new RegExp("[	 ]"), "");
+  equation = equation.replaceAll(new RegExp("[	 ]"), "").toLowerCase();
   String number = "";
   String lastSymbol = "";
   List<String> stack = new List<String>();
@@ -297,6 +297,21 @@ List<String> ParseEquation(String equation){
       }
       AddNumberToStack();
       i += 1;
+    } else if (equation[i] == "π"){
+      if (number == "-"){
+        number += PI.toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = PI.toString();
+      } else{
+        number = PI.toString();
+      }
+      AddNumberToStack();
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "exp"){
+      AddNumberToStack();
+      stack.add("exp");
+      i += 2;
     } else if (equation[i] == "e"){
       if (number == "-"){
         number += E.toString();
@@ -306,6 +321,40 @@ List<String> ParseEquation(String equation){
         number = E.toString();
       } else{
         number = E.toString();
+      }
+      AddNumberToStack();
+    } else if (equation[i] == "°"){
+      if (number == "-"){
+        number += (0.017453292519943295).toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = (0.017453292519943295).toString();
+      } else{
+        number = (0.017453292519943295).toString();
+      }
+      AddNumberToStack();
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "phi"){
+      if (number == "-"){
+        number += (1.61803398874989484820458683436563811772030917980576).toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = (1.61803398874989484820458683436563811772030917980576).toString();
+      } else{
+        number = (1.61803398874989484820458683436563811772030917980576).toString();
+      }
+      AddNumberToStack();
+      i += 2;
+    } else if (equation[i] == "φ" || equation[i] == "Φ" || equation[i] == "ϕ"){
+      if (number == "-"){
+        number += (1.61803398874989484820458683436563811772030917980576).toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = (1.61803398874989484820458683436563811772030917980576).toString();
+      } else{
+        number = (1.61803398874989484820458683436563811772030917980576).toString();
       }
       AddNumberToStack();
     } else if (equation[i] == "!"){
@@ -411,6 +460,10 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("sqrt");
       i += 3;
+    } else if ((equation.length > i+4 && equation.substring(i, i+5) == "gamma")){
+      AddNumberToStack();
+      stack.add("gamma");
+      i += 4;
     } else if (equation.length > i+2 && equation.substring(i, i+3) == "abs"){
       AddNumberToStack();
       stack.add("abs");
@@ -439,6 +492,10 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("arg");
       i += 2;
+    } else if (equation.length > i+5 && equation.substring(i, i+6) == "choose"){
+      AddNumberToStack();
+      stack.add("choose");
+      i += 5;
     } else if (equation[i].contains(new RegExp("[0-9.]"))){
       number += equation[i];
     } else if (equation[i] == "i"){
@@ -1119,6 +1176,10 @@ double GetPostfixValue(List<String> postfixStack){
       stack.add(arccosec(stack.removeLast()));
     } else if (postfixStack[i] == "sqrt"){
       stack.add(sqrt(stack.removeLast()));
+    } else if (postfixStack[i] == "exp"){
+      stack.add(exp(stack.removeLast()));
+    } else if (postfixStack[i] == "gamma"){
+      stack.add(gamma(stack.removeLast()));
     } else if (postfixStack[i] == "ln"){
       stack.add(log(stack.removeLast()));
     } else if (postfixStack[i] == "log"){
@@ -1145,6 +1206,9 @@ double GetPostfixValue(List<String> postfixStack){
       stack.add((stack.removeLast()).ceilToDouble());
     } else if (postfixStack[i] == "round"){
       stack.add((stack.removeLast()).roundToDouble());
+    } else if (postfixStack[i] == "choose"){
+      double last = stack.removeLast();
+      stack.add(binomialCoefficient(stack.removeLast(), last));
     }
     //print("${postfixStack[i]} : $stack");
   }
@@ -1234,6 +1298,10 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
         stack.add(Sqrt(stack.removeLast()));
       }
       //stack.add(Sqrt(stack.removeLast()));
+    } else if (postfixStack[i] == "exp"){
+      stack.add(Exp(stack.removeLast()));
+    } else if (postfixStack[i] == "gamma"){
+      stack.add(Gamma(stack.removeLast()));
     } else if (postfixStack[i] == "ln"){
       Complex last = stack.removeLast();
       if (last.i == 0.0){
@@ -1254,13 +1322,16 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
       stack.add(new Complex.from(stack.removeLast().Argument));
     } else if (postfixStack[i] == "sign"){
       stack.add(stack.removeLast().Sign);
-    }/* else if (postfixStack[i] == "floor"){
-      stack.add((stack.removeLast()).floorToDouble());
+    } else if (postfixStack[i] == "floor"){
+      stack.add((stack.removeLast()).floor());
     } else if (postfixStack[i] == "ceil"){
-      stack.add((stack.removeLast()).ceilToDouble());
+      stack.add((stack.removeLast()).ceil());
     } else if (postfixStack[i] == "round"){
-      stack.add((stack.removeLast()).roundToDouble());
-    }*/ else{
+      stack.add((stack.removeLast()).round());
+    } else if (postfixStack[i] == "choose"){
+      Complex last = stack.removeLast();
+      stack.add(BinomialCoefficient(stack.removeLast(), last));
+    } else{
       throw UnimplementedError;
     }
     //print("${postfixStack[i]} : $stack");

@@ -73,6 +73,7 @@ class Complex{
   static Complex zero = new Complex(0.0, 0.0);
 
   //Todo: Complex operator unary-() => new Complex(-r, -i);
+  Complex operator -() => new Complex(-r, -i);
  
   Complex operator +(Complex other) => new Complex(r+other.r,i+other.i);
   Complex operator -(Complex other) => new Complex(r-other.r,i-other.i);
@@ -148,15 +149,18 @@ Complex Log(Complex n){
 }
 
 Complex Gamma(Complex val){
-  List<double> p = [676.5203681218851
-    ,-1259.1392167224028
-    ,771.32342877765313
-    ,-176.61502916214059
-    ,12.507343278686905
-    ,-0.13857109526572012
-    ,9.9843695780195716e-6
-    ,1.5056327351493116e-7
-    ];
+  if (val.i == 0.0){
+    return new Complex.from(gamma(val.r));
+  }
+  List<double> p = [676.5203681218851,
+    -1259.1392167224028,
+    771.32342877765313,
+    -176.61502916214059,
+    12.507343278686905,
+    -0.13857109526572012,
+    9.9843695780195716e-6,
+    1.5056327351493116e-7
+  ];
   Complex res;
   if (val.r < 0.5){
     res = new Complex.from(pi) / ((val.timesConst(pi)).sin() * Gamma(Complex.one-val));
@@ -167,7 +171,15 @@ Complex Gamma(Complex val){
       x += new Complex.from(p[i])/(val+new Complex.from(i.toDouble())+Complex.one);
     }
     Complex t = val + new Complex.from(p.length.toDouble()) - new Complex.from(0.5);
-    res = Pow(t, (val+new Complex.from(0.5))).timesConst(sqrt(2*pi)) * Exp(t.timesConst(-1)) * x;
+    res = Pow(t, (val+new Complex.from(0.5))).timesConst(sqrt(2*pi)) * Exp(-t) * x;
   }
   return res;
+}
+
+Complex BinomialCoefficient(Complex x, Complex y){
+  if (x.i == 0.0 && y.i == 0.0){
+    return new Complex.from(binomialCoefficient(x.r, y.r));
+  } else{
+    return Gamma(x+Complex.one)/(Gamma(y+Complex.one)*Gamma(x-y+Complex.one));
+  }
 }
