@@ -34,7 +34,18 @@
         </div>
       </div>
     </div>
+    <nav class="sidemenu sidemenu-vertical sidemenu-right" id="sidemenu">
+      <h3>Menu</h3>
+      <button id="complexmodebutton" class="button-active" onclick="toggleButton(this)">Complex Mode</button>
+      <button id="plotenabledbutton" class="button-active" onclick="toggleButton(this)">Enable Plotting</button>
+      <button id="createlinkbutton" class="">Create Link</button>
+    </nav>
     <script type="application/dart" src="main.dart"></script>
     <script src="packages/browser/dart.js"></script>
+    <script>
+      function toggleButton(butt){
+        butt.classList.toggle('button-active');
+      };
+    </script>
   </body>
 </html>

@@ -31,7 +31,6 @@ body {
     padding: 6px 6px 6px 32px;
     text-decoration: none;
     font-size: 26px;
-    color: #818181;
     display: block;
 }
 
@@ -80,4 +79,74 @@ body {
     font-size: 18px;
     text-align: center;
     padding-bottom: 6px;
+}
+
+/* General styles for all menus */
+
+.sidemenu {
+	background: #292929;
+    position: fixed;
+    transition: 0.5s;
+}
+
+.sidemenu h3 {
+	color: #ffffff;
+	font-size: 1.9em;
+	padding: 20px;
+	margin: 0;
+	font-weight: 300;
+	background: #1a1a1a;
+}
+
+.sidemenu button {
+	display: block;
+    color: #ffffff;
+    background: #292929;
+	font-size: 1.1em;
+    font-weight: 300;
+    padding: 1em;
+    border: none;
+    width: 100%;
+}
+
+.sidemenu button.button-active {
+    background: #583c22;
+}
+
+.sidemenu button:hover {
+	background: #1a1919;
+}
+
+.sidemenu button:active {
+	background: #1d1c1c;
+}
+
+/* Orientation-dependent styles for the content of the menu */
+
+.sidemenu-vertical {
+	width: 240px;
+	height: 100%;
+	top: 0;
+	z-index: 1000;
+}
+
+/* Vertical menu that slides from the left or right */
+
+.sidemenu-right {
+	right: -240px;
+}
+.sidemenu-right.sidemenu-open {
+	right: 0px;
+}
+
+.cbp-spmenu {
+	-webkit-transition: all 0.3s ease;
+	-moz-transition: all 0.3s ease;
+	transition: all 0.3s ease;
+}
+
+@media screen and (max-height: 26.375em){
+	.sidemenu-right {
+		right: -190px;
+	}
 }

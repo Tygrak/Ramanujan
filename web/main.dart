@@ -19,6 +19,8 @@ void main(){
   canvas = querySelector("#canvas");
   print(canvas.className);
   button.addEventListener("click", ButtonClicked);
+  ButtonElement linkbutton = querySelector("#createlinkbutton");
+  linkbutton.addEventListener("click", LinkButtonClicked);
   if (Uri.base.queryParameters['minx'] != "" && Uri.base.queryParameters['minx'] != null){
     print("MinX: ${Uri.base.queryParameters['minx']}");
     eMinX = num.parse(Uri.base.queryParameters['minx']);
@@ -45,6 +47,9 @@ void main(){
     if (ke.keyCode == KeyCode.ENTER){
       ButtonClicked("e");       
     } else if (ke.keyCode == KeyCode.F1){
+      Element menu = querySelector("#sidemenu");
+      menu.classes.toggle("sidemenu-open");
+    } else if (ke.keyCode == KeyCode.F2){
       Element results = querySelector("#resultitems");
       if (!results.innerHtml.contains("Equation Link")){
         InputElement element = querySelector("[name=equation]");
@@ -124,7 +129,11 @@ void ButtonClicked(e){
   print("$infixStack");
   List<String> postfixStack = InfixToPostfix(infixStack);
   print("----------");
+  ButtonElement complexModeButton = querySelector("#complexmodebutton");
   try{
+    if (!complexModeButton.classes.contains("button-active")){
+      throw Exception;
+    }
     Complex expressionValue = GetComplexPostfixValue(postfixStack);
     print("$infixStack -> $postfixStack -> $expressionValue");
     if ((expressionValue.r.round()-expressionValue.r).abs() < 0.000005){
@@ -147,23 +156,28 @@ void ButtonClicked(e){
         VariablePolynom deriv2 = DerivatePolynom(deriv);
         List<double> roots = GetPolynomRoots(vp);
         List<Complex> complexRoots;
-        if (roots.length < vp.GetHighestMonomial().degree.round()){
+        if (roots.length < vp.GetHighestMonomial().degree.round() && complexModeButton.classes.contains("button-active")){
           complexRoots = GetPolynomComplexRoots(vp);
         }
         print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
-        PlotPolynomFunction(vp);
-        String rootsHtml = "";
-        for (var i = 0; i < complexRoots.length; i++){
-          if (rootsHtml != "") rootsHtml += "<br>";
-          rootsHtml += "${complexRoots[i]}";
-          print("complex root : ${complexRoots[i]}");
+        ButtonElement plotButton = querySelector("#plotenabledbutton");
+        if (plotButton.classes.contains("button-active")){
+          PlotPolynomFunction(vp);
         }
-        if (complexRoots.length == 0){
-          //PageAddResult("Complex roots", "No roots found.");
-        } else if (complexRoots.length == 1){
-          PageAddResult("Complex root", "${rootsHtml}");
-        } else{
-          PageAddResult("Complex roots", "${rootsHtml}");
+        String rootsHtml = "";
+        if (complexModeButton.classes.contains("button-active")){
+          for (var i = 0; i < complexRoots.length; i++){
+            if (rootsHtml != "") rootsHtml += "<br>";
+            rootsHtml += "${complexRoots[i]}";
+            print("complex root : ${complexRoots[i]}");
+          }
+          if (complexRoots.length == 0){
+            //PageAddResult("Complex roots", "No roots found.");
+          } else if (complexRoots.length == 1){
+            PageAddResult("Complex root", "${rootsHtml}");
+          } else{
+            PageAddResult("Complex roots", "${rootsHtml}");
+          }
         }
         rootsHtml = "";
         for (var i = 0; i < roots.length; i++){
@@ -186,7 +200,10 @@ void ButtonClicked(e){
       } catch (e){
         if (e.toString() != "UnsupportedError") print(e);
         List<double> roots = GetSecantRoots(postfixStack);
-        PlotFunction(postfixStack);
+        ButtonElement plotButton = querySelector("#plotenabledbutton");
+        if (plotButton.classes.contains("button-active")){
+          PlotFunction(postfixStack);
+        }
         String rootsHtml = "";
         for (var i = 0; i < roots.length; i++){
           if (rootsHtml != "") rootsHtml += "<br>";
@@ -202,6 +219,21 @@ void ButtonClicked(e){
         }
       }
     }
+  }
+}
+
+void LinkButtonClicked(e){
+  Element results = querySelector("#resultitems");
+  if (!results.innerHtml.contains("Equation Link")){
+    InputElement element = querySelector("[name=equation]");
+    String link = "http://ramanujan.wz.cz/?q=" + element.value.replaceAll("+", "|43");
+    if (eMinX != null){
+      link += "&minx=$eMinX&maxx=$eMaxX";
+    }
+    if (eMinY != null){
+      link += "&miny=$eMinY&maxy=$eMaxY";
+    }
+    PageAddResult("Equation Link", link);
   }
 }
 
