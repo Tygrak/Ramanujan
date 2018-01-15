@@ -34,10 +34,19 @@
         </div>
       </div>
     </div>
+    <div id="sidemenubuttondiv">
+      <button id="sidemenubutton" class="" onclick="toggleButton(this)"></button>
+    </div>
     <nav class="sidemenu sidemenu-vertical sidemenu-right" id="sidemenu">
       <h3>Menu</h3>
       <button id="complexmodebutton" class="button-active" onclick="toggleButton(this)">Complex Mode</button>
       <button id="plotenabledbutton" class="button-active" onclick="toggleButton(this)">Enable Plotting</button>
+      <div id="plotoptions" class="">
+        <div class="label">X:</div><input type="text" name="xfrom" value="-5"><input type="text" name="xto" value="5">
+        <br>
+        <div class="label">Y:</div><input type="text" name="yfrom" value="-5"><input type="text" name="yto" value="5">
+        <button id="setplotrangebutton">Set Range</button>
+      </div>
       <button id="createlinkbutton" class="">Create Link</button>
     </nav>
     <script type="application/dart" src="main.dart"></script>

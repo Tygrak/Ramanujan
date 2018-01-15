@@ -20,29 +20,21 @@ void main(){
   print(canvas.className);
   button.addEventListener("click", ButtonClicked);
   ButtonElement linkbutton = querySelector("#createlinkbutton");
-  linkbutton.addEventListener("click", LinkButtonClicked);
-  if (Uri.base.queryParameters['minx'] != "" && Uri.base.queryParameters['minx'] != null){
-    print("MinX: ${Uri.base.queryParameters['minx']}");
-    eMinX = num.parse(Uri.base.queryParameters['minx']);
-  }
-  if (Uri.base.queryParameters['miny'] != "" && Uri.base.queryParameters['miny'] != null){
-    print("MinY: ${Uri.base.queryParameters['miny']}");
-    eMinY = num.parse(Uri.base.queryParameters['miny']);
-  }
-  if (Uri.base.queryParameters['maxx'] != "" && Uri.base.queryParameters['maxx'] != null){
-    print("MaxX: ${Uri.base.queryParameters['maxx']}");
-    eMaxX = num.parse(Uri.base.queryParameters['maxx']);
-  }
-  if (Uri.base.queryParameters['maxy'] != "" && Uri.base.queryParameters['maxy'] != null){
-    print("MaxY: ${Uri.base.queryParameters['maxy']}");
-    eMaxY = num.parse(Uri.base.queryParameters['maxy']);
-  }
-  if (Uri.base.queryParameters['q'] != "" && Uri.base.queryParameters['q'] != null){
-    print("Equation from url: ${Uri.base.queryParameters['q']}");
-    InputElement element = querySelector("[name=equation]");
-    element.value = Uri.base.queryParameters['q'].replaceAll("|43", "+");
-    ButtonClicked("e");
-  }
+  linkbutton.addEventListener("click", (e) {CreateLink();});
+  ButtonElement sidemenubutton = querySelector("#sidemenubutton");
+  sidemenubutton.addEventListener("click", (e) {
+    sidemenubutton.innerHtml = sidemenubutton.innerHtml == "x" ? "" : "x";
+    Element menu = querySelector("#sidemenu");
+    menu.classes.toggle("sidemenu-open");}
+  );
+  ButtonElement enableplottingbutton = querySelector("#plotenabledbutton");
+  enableplottingbutton.addEventListener("click", (e) {
+    Element menu = querySelector("#plotoptions");
+    menu.classes.toggle("hidden");}
+  );
+  ButtonElement setplotrangebutton = querySelector("#setplotrangebutton");
+  setplotrangebutton.addEventListener("click", SetPlotRangeButtonClicked);
+  LoadLinkParametres();
   window.onKeyDown.listen((KeyboardEvent ke){
     if (ke.keyCode == KeyCode.ENTER){
       ButtonClicked("e");       
@@ -50,18 +42,7 @@ void main(){
       Element menu = querySelector("#sidemenu");
       menu.classes.toggle("sidemenu-open");
     } else if (ke.keyCode == KeyCode.F2){
-      Element results = querySelector("#resultitems");
-      if (!results.innerHtml.contains("Equation Link")){
-        InputElement element = querySelector("[name=equation]");
-        String link = "http://ramanujan.wz.cz/?q=" + element.value.replaceAll("+", "|43");
-        if (eMinX != null){
-          link += "&minx=$eMinX&maxx=$eMaxX";
-        }
-        if (eMinY != null){
-          link += "&miny=$eMinY&maxy=$eMaxY";
-        }
-        PageAddResult("Equation Link", link);
-      }
+      CreateLink();
     }
   });
 }
@@ -165,19 +146,26 @@ void ButtonClicked(e){
           PlotPolynomFunction(vp);
         }
         String rootsHtml = "";
-        if (complexModeButton.classes.contains("button-active")){
+        if (complexModeButton.classes.contains("button-active") && complexRoots != null){
           for (var i = 0; i < complexRoots.length; i++){
+            Complex val = complexRoots[i];
             if (rootsHtml != "") rootsHtml += "<br>";
-            rootsHtml += "${complexRoots[i]}";
-            print("complex root : ${complexRoots[i]}");
+            if ((complexRoots[i].i-complexRoots[i].i.roundToDouble()).abs() < 0.00000001){
+              val = new Complex(val.r, complexRoots[i].i.roundToDouble());
+            }
+            if ((complexRoots[i].r-complexRoots[i].r.roundToDouble()).abs() < 0.00000001){
+              val = new Complex(complexRoots[i].r.roundToDouble(), val.i);
+            }
+            rootsHtml += "${val}";
+            print("complex root : ${val}");
           }
-          if (complexRoots.length == 0){
+          /*if (complexRoots.length == 0){
             //PageAddResult("Complex roots", "No roots found.");
           } else if (complexRoots.length == 1){
             PageAddResult("Complex root", "${rootsHtml}");
           } else{
             PageAddResult("Complex roots", "${rootsHtml}");
-          }
+          }*/
         }
         rootsHtml = "";
         for (var i = 0; i < roots.length; i++){
@@ -222,7 +210,42 @@ void ButtonClicked(e){
   }
 }
 
-void LinkButtonClicked(e){
+void LoadLinkParametres(){
+  if (Uri.base.queryParameters['minx'] != "" && Uri.base.queryParameters['minx'] != null){
+    print("MinX: ${Uri.base.queryParameters['minx']}");
+    eMinX = num.parse(Uri.base.queryParameters['minx']);
+  }
+  if (Uri.base.queryParameters['miny'] != "" && Uri.base.queryParameters['miny'] != null){
+    print("MinY: ${Uri.base.queryParameters['miny']}");
+    eMinY = num.parse(Uri.base.queryParameters['miny']);
+  }
+  if (Uri.base.queryParameters['maxx'] != "" && Uri.base.queryParameters['maxx'] != null){
+    print("MaxX: ${Uri.base.queryParameters['maxx']}");
+    eMaxX = num.parse(Uri.base.queryParameters['maxx']);
+  }
+  if (Uri.base.queryParameters['maxy'] != "" && Uri.base.queryParameters['maxy'] != null){
+    print("MaxY: ${Uri.base.queryParameters['maxy']}");
+    eMaxY = num.parse(Uri.base.queryParameters['maxy']);
+  }
+  if (Uri.base.queryParameters['complex'] == "0"){
+    ButtonElement complexmodebutton = querySelector("#complexmodebutton");
+    complexmodebutton.classes.remove("button-active");
+  }
+  if (Uri.base.queryParameters['plot'] == "0"){
+    ButtonElement plotenabledbutton = querySelector("#plotenabledbutton");
+    plotenabledbutton.classes.remove("button-active");
+    Element menu = querySelector("#plotoptions");
+    menu.classes.add("hidden");
+  }
+  if (Uri.base.queryParameters['q'] != "" && Uri.base.queryParameters['q'] != null){
+    print("Equation from url: ${Uri.base.queryParameters['q']}");
+    InputElement element = querySelector("[name=equation]");
+    element.value = Uri.base.queryParameters['q'].replaceAll("|43", "+");
+    ButtonClicked("e");
+  }
+}
+
+void CreateLink(){
   Element results = querySelector("#resultitems");
   if (!results.innerHtml.contains("Equation Link")){
     InputElement element = querySelector("[name=equation]");
@@ -233,8 +256,27 @@ void LinkButtonClicked(e){
     if (eMinY != null){
       link += "&miny=$eMinY&maxy=$eMaxY";
     }
+    ButtonElement complexModeButton = querySelector("#complexmodebutton");
+    if (!complexModeButton.classes.contains("button-active")){
+      link += "&complex=0";
+    }
+    ButtonElement plotenabledbutton = querySelector("#plotenabledbutton");
+    if (!plotenabledbutton.classes.contains("button-active")){
+      link += "&plot=0";
+    }
     PageAddResult("Equation Link", link);
   }
+}
+
+void SetPlotRangeButtonClicked(e){
+  InputElement input = querySelector("[name=xfrom]");
+  eMinX = num.parse(input.value);
+  input = querySelector("[name=xto]");
+  eMaxX = num.parse(input.value);
+  input = querySelector("[name=yfrom]");
+  eMinY = num.parse(input.value);
+  input = querySelector("[name=yto]");
+  eMaxY = num.parse(input.value);
 }
 
 void PageClearResult(){
@@ -944,6 +986,10 @@ void PlotPolynomFunction(VariablePolynom polynom){
     stepSize = 1.0;
   } else if ((maxX-minX).round() == 20){
     stepSize = 2.0;
+  } else if ((maxX-minX)/2 <= 0.25){
+    stepSize = ((maxX-minX)/2).floor()*0.05 > 0.05 ? ((maxX-minX)/2).floor()*0.05 : 0.05;
+  } else if ((maxX-minX).round() <= 1){
+    stepSize = ((maxX-minX)/2).floor()*0.1 > 0.1 ? ((maxX-minX)/2).floor()*0.1 : 0.1;
   } else {
     stepSize = ((maxX-minX)/2).floor()*0.25 > 0.25 ? ((maxX-minX)/2).floor()*0.25 : 0.25;
   }
@@ -953,7 +999,7 @@ void PlotPolynomFunction(VariablePolynom polynom){
     ctx.beginPath();
     ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
     ctx.lineTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+5);
-    ctx.fillText("${i.toStringAsFixed(2)}", MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+18);
+    if (i.abs() > 0.000001) ctx.fillText("${i.toStringAsFixed(2)}", MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+18);
     ctx.closePath();
     if (f) ctx.stroke();
   }
@@ -962,14 +1008,24 @@ void PlotPolynomFunction(VariablePolynom polynom){
     xorigin = 40.0;
     f = false;
   }
-  stepSize = ((maxY-minY)/2).floor()*0.25 > 0.25 ? ((maxY-minY)/2).floor()*0.25 : 0.25;
+  if ((maxY-minY).round() == 10){
+    stepSize = 1.0;
+  } else if ((maxY-minY).round() == 20){
+    stepSize = 2.0;
+  } else if ((maxY-minY)/2 <= 0.25){
+    stepSize = ((maxY-minY)/2).floor()*0.05 > 0.05 ? ((maxY-minY)/2).floor()*0.05 : 0.05;
+  } else if ((maxY-minY).round() <= 1){
+    stepSize = ((maxY-minY)/2).floor()*0.1 > 0.1 ? ((maxY-minY)/2).floor()*0.1 : 0.1;
+  } else {
+    stepSize = ((maxY-minY)/2).floor()*0.25 > 0.25 ? ((maxY-minY)/2).floor()*0.25 : 0.25;
+  }
   if (stepSize > 1.0) stepSize = stepSize.roundToDouble();
   for (var i = minY; i < maxY; i += stepSize){
     if (i <= minY || i >= maxY || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
     ctx.lineTo(xorigin+5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
-    ctx.fillText("${i.toStringAsFixed(2)}", xorigin-20, 400-MapToRange(i, minY, maxY, 0.0, 400.0)+4);
+    if (i.abs() > 0.000001) ctx.fillText("${i.toStringAsFixed(2)}", xorigin-20, 400-MapToRange(i, minY, maxY, 0.0, 400.0)+4);
     ctx.closePath();
     if (f) ctx.stroke();
   }
@@ -1089,6 +1145,10 @@ void PlotFunction(List<String> postfixStack){
     stepSize = 1.0;
   } else if ((maxX-minX).round() == 20){
     stepSize = 2.0;
+  } else if ((maxX-minX)/2 <= 0.25){
+    stepSize = ((maxX-minX)/2).floor()*0.05 > 0.05 ? ((maxX-minX)/2).floor()*0.05 : 0.05;
+  } else if ((maxX-minX).round() <= 1){
+    stepSize = ((maxX-minX)/2).floor()*0.1 > 0.1 ? ((maxX-minX)/2).floor()*0.1 : 0.1;
   } else {
     stepSize = ((maxX-minX)/2).floor()*0.25 > 0.25 ? ((maxX-minX)/2).floor()*0.25 : 0.25;
   }
@@ -1098,7 +1158,7 @@ void PlotFunction(List<String> postfixStack){
     ctx.beginPath();
     ctx.moveTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin-5);
     ctx.lineTo(MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+5);
-    ctx.fillText("${i.toStringAsFixed(2)}", MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+18);
+    if (i.abs() > 0.000001) ctx.fillText("${i.toStringAsFixed(2)}", MapToRange(i, minX, maxX, 0.0, 400.0), 400-yorigin+18);
     ctx.closePath();
     if (f) ctx.stroke();
   }
@@ -1107,14 +1167,24 @@ void PlotFunction(List<String> postfixStack){
     xorigin = 40.0;
     f = false;
   }
-  stepSize = ((maxY-minY)/2).floor()*0.25 > 0.25 ? ((maxY-minY)/2).floor()*0.25 : 0.25;
+  if ((maxY-minY).round() == 10){
+    stepSize = 1.0;
+  } else if ((maxY-minY).round() == 20){
+    stepSize = 2.0;
+  } else if ((maxY-minY)/2 <= 0.25){
+    stepSize = ((maxY-minY)/2).floor()*0.05 > 0.05 ? ((maxY-minY)/2).floor()*0.05 : 0.05;
+  } else if ((maxY-minY).round() <= 1){
+    stepSize = ((maxY-minY)/2).floor()*0.1 > 0.1 ? ((maxY-minY)/2).floor()*0.1 : 0.1;
+  } else {
+    stepSize = ((maxY-minY)/2).floor()*0.25 > 0.25 ? ((maxY-minY)/2).floor()*0.25 : 0.25;
+  }
   if (stepSize > 1.0) stepSize = stepSize.roundToDouble();
   for (var i = minY; i < maxY; i += stepSize){
     if (i <= minY || i >= maxY || i == 0) continue;
     ctx.beginPath();
     ctx.moveTo(xorigin-5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
     ctx.lineTo(xorigin+5, 400-MapToRange(i, minY, maxY, 0.0, 400.0));
-    ctx.fillText("${i.toStringAsFixed(2)}", xorigin-20, 400-MapToRange(i, minY, maxY, 0.0, 400.0)+4);
+    if (i.abs() > 0.000001) ctx.fillText("${i.toStringAsFixed(2)}", xorigin-20, 400-MapToRange(i, minY, maxY, 0.0, 400.0)+4);
     ctx.closePath();
     if (f) ctx.stroke();
   }
@@ -1324,10 +1394,10 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
       stack.add(arccosec(stack.removeLast()));
     }*/ else if (postfixStack[i] == "sqrt"){
       Complex last = stack.removeLast();
-      if (last.i == 0.0){
+      if (last.i == 0.0 && last.r >= 0.0){
         stack.add(new Complex.from(sqrt(last.r)));
       } else{
-        stack.add(Sqrt(stack.removeLast()));
+        stack.add(Sqrt(last));
       }
       //stack.add(Sqrt(stack.removeLast()));
     } else if (postfixStack[i] == "exp"){
