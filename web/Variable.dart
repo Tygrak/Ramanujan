@@ -76,6 +76,13 @@ class VariablePolynom{
   }
   VariablePolynom operator /(VariablePolynom other){
     VariablePolynom res = new VariablePolynom();
+    if (IsMultipleOfPolynom(other)){
+      res.variables.add(new Variable(PolynomialRatio(other), 0.0));
+      return res;
+    }
+    if (this != other && other.variables.length > 1){
+      throw UnimplementedError;
+    }
     for (var v1 in variables){
       for (var v2 in other.variables){
         res.variables.add(v1/v2);
@@ -95,12 +102,36 @@ class VariablePolynom{
     return res;
   }
   bool operator ==(VariablePolynom other){
+    if (variables.length != other.variables.length){
+      return false;
+    }
     for (var i = variables.length-1; i >= 0; i--){
       if (variables[i] != other.variables[i]){
         return false;
       }
     }
     return true;
+  }
+
+  bool IsMultipleOfPolynom(VariablePolynom other){
+    if (variables.length != other.variables.length){
+      return false;
+    }
+    double ml;
+    for (var i = variables.length-1; i >= 0; i--){
+      if (variables[i].degree != other.variables[i].degree){
+        return false;
+      }
+      double m = variables[i].c/other.variables[i].c;
+      if (ml != null && m != ml){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  double PolynomialRatio(VariablePolynom other){
+    return GetHighestMonomial().c/other.GetHighestMonomial().c;
   }
 
   double Evaluate(double variableValue){

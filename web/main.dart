@@ -48,64 +48,9 @@ void main(){
 }
 
 void ButtonClicked(e){
-  PageClearResult();
+  PageClearResults();
   InputElement element = querySelector("[name=equation]");
   String equation = element.value;
-  if (equation.toLowerCase().startsWith("xfrom ") || equation.toLowerCase().startsWith("minx ")){
-    List<String> parts = equation.toLowerCase().split(" ");
-    eMinX = null;
-    for (var i = 0; i < parts.length; i++){
-      double val = num.parse(parts[i], (String s) => null);
-      print("${parts[i]} : $val");
-      if (val != null){
-        if (eMinX == null) eMinX = val;
-        else if (eMaxX == null) eMaxX = val;
-        else break;
-      }
-    }
-    print("MinX set to $eMinX, maxX set to $eMaxX");
-    PageAddResult("Result", "MinX set to $eMinX, maxX set to $eMaxX.");
-    return;
-  } else if (equation.toLowerCase().startsWith("xto ") || equation.toLowerCase().startsWith("maxx ")){
-    List<String> parts = equation.toLowerCase().split(" ");
-    for (var i = 0; i < parts.length; i++){
-      double val = num.parse(parts[i], (String s) => null);
-      print("${parts[i]} : $val");
-      if (val != null){
-        eMaxX = val;
-      }
-    }
-    print("MinX set to $eMinX, maxX set to $eMaxX");
-    PageAddResult("Result", "MinX set to $eMinX, maxX set to $eMaxX.");
-    return;
-  } else if (equation.toLowerCase().startsWith("yfrom ") || equation.toLowerCase().startsWith("miny ")){
-    List<String> parts = equation.toLowerCase().split(" ");
-    eMinY = null;
-    for (var i = 0; i < parts.length; i++){
-      double val = num.parse(parts[i], (String s) => null);
-      print("${parts[i]} : $val");
-      if (val != null){
-        if (eMinY == null) eMinY = val;
-        else if (eMaxY == null) eMaxY = val;
-        else break;
-      }
-    }
-    print("MinY set to $eMinY, maxY set to $eMaxY");
-    PageAddResult("Result", "MinY set to $eMinY, maxY set to $eMaxY.");
-    return;
-  } else if (equation.toLowerCase().startsWith("yto ") || equation.toLowerCase().startsWith("maxy ")){
-    List<String> parts = equation.toLowerCase().split(" ");
-    for (var i = 0; i < parts.length; i++){
-      double val = num.parse(parts[i], (String s) => null);
-      print("${parts[i]} : $val");
-      if (val != null){
-        eMaxY = val;
-      }
-    }
-    print("MinY set to $eMinY, maxY set to $eMaxY");
-    PageAddResult("Result", "MinY set to $eMinY, maxY set to $eMaxY.");
-    return;
-  }
   List<String> infixStack = ParseEquation(equation);
   print("$infixStack");
   List<String> postfixStack = InfixToPostfix(infixStack);
@@ -159,13 +104,13 @@ void ButtonClicked(e){
             rootsHtml += "${val}";
             print("complex root : ${val}");
           }
-          /*if (complexRoots.length == 0){
+          if (complexRoots.length == 0){
             //PageAddResult("Complex roots", "No roots found.");
           } else if (complexRoots.length == 1){
             PageAddResult("Complex root", "${rootsHtml}");
           } else{
             PageAddResult("Complex roots", "${rootsHtml}");
-          }*/
+          }
         }
         rootsHtml = "";
         for (var i = 0; i < roots.length; i++){
@@ -198,7 +143,7 @@ void ButtonClicked(e){
           rootsHtml += "${roots[i]}";
           print("root : ${roots[i]}");
         }
-        if (roots.length == 0){
+        if (roots.length == 0 || roots.length >= 15){
           PageAddResult("Roots", "No roots found.");
         } else if (roots.length == 1){
           PageAddResult("Root", "${rootsHtml}");
@@ -279,7 +224,7 @@ void SetPlotRangeButtonClicked(e){
   eMaxY = num.parse(input.value);
 }
 
-void PageClearResult(){
+void PageClearResults(){
   Element results = querySelector("#resultitems");
   results.innerHtml = "";
   querySelector("#canvasresult").className = "resultitem hidden";
