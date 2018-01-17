@@ -83,8 +83,8 @@ class Complex{
   Complex _Divide(Complex other){
     double temp = other.r*other.r + other.i*other.i;
     if (temp == 0){
-      //return new Complex(0.0, 0.0);
-      throw new Exception("Complex division leads to division by zero.");
+      return new Complex(double.infinity, 0.0);
+      //throw new Exception("$this/$other : Complex division leads to division by zero.");
     }
     return new Complex((r*other.r + i*other.i)/temp, (i*other.r - r*other.i)/temp);
   }
@@ -131,7 +131,8 @@ Complex Pow(Complex n, Complex toPow){
   //pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument)*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument)
   //print("pow: ${pow(n.ModulusSquared, toPow.r/2)}*e**(${-toPow.i}*${n.Argument})*cos((${toPow.i}*log(${n.ModulusSquared}))/2+${toPow.r}*${n.Argument})");
   if (toPow == Complex.one) return n;
-  else if (toPow.r % 1 == 0 && toPow.i == 0){
+  else if (n != Complex.zero && toPow == Complex.zero) return Complex.one;
+  else if (toPow.r % 1 == 0 && toPow.i == 0 && toPow.r >= 1){
     return n.powint(toPow.r.round());
   }
   double x = pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument);

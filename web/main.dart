@@ -82,7 +82,7 @@ void ButtonClicked(e){
         VariablePolynom deriv2 = DerivatePolynom(deriv);
         List<double> roots = GetPolynomRoots(vp);
         List<Complex> complexRoots;
-        if (roots.length < vp.GetHighestMonomial().degree.round() && complexModeButton.classes.contains("button-active")){
+        if ((roots.length < vp.GetHighestMonomial().degree.round() || vp.GetLowestMonomial().degree < 1) && complexModeButton.classes.contains("button-active")){
           complexRoots = GetPolynomComplexRoots(vp);
         }
         print("$infixStack -> $postfixStack -> $vp -> $deriv -> $deriv2");
@@ -143,7 +143,7 @@ void ButtonClicked(e){
           rootsHtml += "${roots[i]}";
           print("root : ${roots[i]}");
         }
-        if (roots.length == 0 || roots.length >= 15){
+        if (roots.length == 0){
           PageAddResult("Roots", "No roots found.");
         } else if (roots.length == 1){
           PageAddResult("Root", "${rootsHtml}");
@@ -625,7 +625,7 @@ VariablePolynom SimplifyPostfix(List<String> postfixStack){
       VariablePolynom slast = stack.removeLast();
       VariablePolynom res = new VariablePolynom();
       res.variables = new List.from(slast.variables);
-      if (last.GetHighestMonomial().degree > 0){
+      if (last.GetHighestMonomial().degree > 0 || last.variables[0].c%1 != 0){
         throw UnsupportedError;
       }
       if (last.variables[0].c == 0){
@@ -731,6 +731,16 @@ List<double> GetPolynomRoots(VariablePolynom polynom){
   for (var i = roots.length-1; i >= 0; i--){
     if (!divisors.contains(roots[i]) && polynom.Evaluate(roots[i]).abs() > 0.6){
       roots.removeAt(i);
+    } else{
+      int count = 0;
+      for (var j = -5; j < 5; j++){
+        if (polynom.Evaluate(roots[i]+j) == 0){
+          count++;
+        }
+      }
+      if (count > 3){
+        roots.removeAt(i);
+      }
     }
   }
   return roots;
@@ -769,15 +779,48 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
         }
       }
       //print("${new Complex(r, i)} -> $root");
+      //print("${new Complex(r, i)} -> $root -> ${polynom.ComplexEvaluate(root)}");
     }
   }
-  //GetRootsFromRange(1.0, -1.0, 10.0, 100.5);
+  //GetRootsFromRange(0.68736, 0.39685, 10.0, 100.5);
   GetRootsFromRange(1.0, -10.0, 10.0, 0.5);
   GetRootsFromRange(-1.0, -10.0, 10.0, 0.5);
   GetRootsFromRange(-10.0, -10000.0, 10000.0, 2000.0);
   GetRootsFromRange(10.0, -10000.0, 10000.0, 2000.0);
   for (var i = roots.length-1; i >= 0; i--){
-    print(roots[i]);
+    if (polynom.ComplexEvaluate(-roots[i]).ModulusSquared <= 0.000001){
+      Complex c = -roots[i];
+      bool f = true;
+      for (var j = 0; j < roots.length; j++) {
+        if ((c-roots[j]).ModulusSquared <= 0.00001){
+          f = false;
+        }
+      }
+      if (f) roots.add(c);
+    }
+    if (polynom.ComplexEvaluate(new Complex(roots[i].r*-1, roots[i].i)).ModulusSquared <= 0.000001){
+      Complex c = new Complex(roots[i].r*-1, roots[i].i);
+      bool f = true;
+      for (var j = 0; j < roots.length; j++) {
+        if ((c-roots[j]).ModulusSquared <= 0.00001){
+          f = false;
+        }
+      }
+      if (f) roots.add(c);
+    }
+    if (polynom.ComplexEvaluate(new Complex(roots[i].r, roots[i].i*-1)).ModulusSquared <= 0.000001){
+      Complex c = new Complex(roots[i].r, roots[i].i*-1);
+      bool f = true;
+      for (var j = 0; j < roots.length; j++) {
+        if ((c-roots[j]).ModulusSquared <= 0.00001){
+          f = false;
+        }
+      }
+      if (f) roots.add(c);
+    }
+  }
+  for (var i = roots.length-1; i >= 0; i--){
+    //print(roots[i]);
     if ((roots[i].round()-roots[i]).ModulusSquared < 0.01){
       Complex val = roots.removeAt(i);
       if (polynom.ComplexEvaluate(val.round()).ModulusSquared <= 0.001){
@@ -789,8 +832,19 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
     }
   }
   for (var i = roots.length-1; i >= 0; i--){
-    if (roots[i] == null || roots[i].i.abs() <= 0.000001 || !roots[i].isFinite){
+    if (roots[i] == null || roots[i].i.abs() <= 0.000001 || !roots[i].isFinite || polynom.ComplexEvaluate(roots[i]).ModulusSquared > 0.001){
       roots.removeAt(i);
+    } else{
+      print("root ${roots[i]} -> ${polynom.ComplexEvaluate(roots[i])}");
+      int count = 0;
+      for (var j = -5; j < 5; j++){
+        if (polynom.ComplexEvaluate(roots[i]+new Complex.from(j.toDouble())) == Complex.zero){
+          count++;
+        }
+      }
+      if (count > 3){
+        roots.removeAt(i);
+      }
     }
   }
   return roots;
@@ -842,6 +896,16 @@ List<double> GetSecantRoots(List<String> postfixStack){
   for (var i = roots.length-1; i >= 0; i--){
     if (EvaluateFuncAt(postfixStack, roots[i]).abs() > 0.01){
       roots.removeAt(i);
+    } else{
+      int count = 0;
+      for (var j = -5; j < 5; j++){
+        if (EvaluateFuncAt(postfixStack, roots[i]+j) == 0){
+          count++;
+        }
+      }
+      if (count > 3){
+        roots.removeAt(i);
+      }
     }
   }
   for (var i = roots.length-1; i >= 0; i--){

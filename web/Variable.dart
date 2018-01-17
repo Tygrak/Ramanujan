@@ -172,6 +172,20 @@ class VariablePolynom{
       return null;
     }
   }
+
+  Variable GetLowestMonomial(){
+    int lowest = 0;
+    for (var i = 1; i < variables.length; i++){
+      if (variables[i].degree < variables[lowest].degree){
+        lowest = i;
+      }
+    }
+    if (variables.length > 0){
+      return variables[lowest];
+    } else{
+      return null;
+    }
+  }
 }
 
 class Variable{
