@@ -210,6 +210,13 @@ void CreateLink(){
       link += "&plot=0";
     }
     PageAddResult("Equation Link", link);
+  } else{
+    for (var i = 0; i < results.children.length; i++){
+      if (results.children[i].innerHtml.contains("Equation Link")){
+        results.children[i].remove();
+        CreateLink();
+      }
+    }
   }
 }
 
@@ -729,12 +736,12 @@ List<double> GetPolynomRoots(VariablePolynom polynom){
   GetRootsFromRange(-10.0, 10.0, 0.1);
   GetRootsFromRange(-10000.0, 10000.0, 100.0);
   for (var i = roots.length-1; i >= 0; i--){
-    if (!divisors.contains(roots[i]) && polynom.Evaluate(roots[i]).abs() > 0.6){
+    if (polynom.Evaluate(roots[i]).abs() > 0.6){
       roots.removeAt(i);
     } else{
       int count = 0;
       for (var j = -5; j < 5; j++){
-        if (polynom.Evaluate(roots[i]+j) == 0){
+        if (polynom.Evaluate(roots[i]+j).abs() <= 0.00001){
           count++;
         }
       }
@@ -749,8 +756,8 @@ List<double> GetPolynomRoots(VariablePolynom polynom){
 List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
   List<Complex> roots = new List<Complex>();
   VariablePolynom derivate = DerivatePolynom(polynom);
-  Complex NewtonFrom(Complex r){
-    Complex z = r;
+  Complex NewtonFrom(Complex c){
+    Complex z = c;
     for (var i = 0; i < 400; i++){
       //print("$z -> ${polynom.ComplexEvaluate(z)}/${derivate.ComplexEvaluate(z)}");
       z = z-((polynom.ComplexEvaluate(z))/(derivate.ComplexEvaluate(z)));
@@ -758,6 +765,7 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
     if (!z.isFinite){
       return null;
     }
+    //print("potential root: ${c} -> $z -> ${polynom.ComplexEvaluate(z)}");
     return z;
   }
   void GetRootsFromRange(double i, double min, double max, double step){
@@ -779,15 +787,17 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
         }
       }
       //print("${new Complex(r, i)} -> $root");
-      //print("${new Complex(r, i)} -> $root -> ${polynom.ComplexEvaluate(root)}");
+      //print("potroot: ${new Complex(r, i)} -> $root -> ${polynom.ComplexEvaluate(root)}");
     }
   }
-  //GetRootsFromRange(0.68736, 0.39685, 10.0, 100.5);
+  GetRootsFromRange(0.5, 0.0, 10.0, 100.5);
+  GetRootsFromRange(-0.5, 0.0, 10.0, 100.5);
   GetRootsFromRange(1.0, -10.0, 10.0, 0.5);
   GetRootsFromRange(-1.0, -10.0, 10.0, 0.5);
   GetRootsFromRange(-10.0, -10000.0, 10000.0, 2000.0);
   GetRootsFromRange(10.0, -10000.0, 10000.0, 2000.0);
   for (var i = roots.length-1; i >= 0; i--){
+    //print("${roots[i]*Complex.ione} -> ${polynom.ComplexEvaluate(roots[i]*Complex.ione)}");
     if (polynom.ComplexEvaluate(-roots[i]).ModulusSquared <= 0.000001){
       Complex c = -roots[i];
       bool f = true;
@@ -798,8 +808,8 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
       }
       if (f) roots.add(c);
     }
-    if (polynom.ComplexEvaluate(new Complex(roots[i].r*-1, roots[i].i)).ModulusSquared <= 0.000001){
-      Complex c = new Complex(roots[i].r*-1, roots[i].i);
+    if (polynom.ComplexEvaluate(roots[i]*Complex.ione).ModulusSquared <= 0.000001){
+      Complex c = roots[i]*Complex.ione;
       bool f = true;
       for (var j = 0; j < roots.length; j++) {
         if ((c-roots[j]).ModulusSquared <= 0.00001){
@@ -808,8 +818,8 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
       }
       if (f) roots.add(c);
     }
-    if (polynom.ComplexEvaluate(new Complex(roots[i].r, roots[i].i*-1)).ModulusSquared <= 0.000001){
-      Complex c = new Complex(roots[i].r, roots[i].i*-1);
+    if (polynom.ComplexEvaluate(roots[i]*-Complex.ione).ModulusSquared <= 0.000001){
+      Complex c = roots[i]*-Complex.ione;
       bool f = true;
       for (var j = 0; j < roots.length; j++) {
         if ((c-roots[j]).ModulusSquared <= 0.00001){
@@ -838,7 +848,7 @@ List<Complex> GetPolynomComplexRoots(VariablePolynom polynom){
       print("root ${roots[i]} -> ${polynom.ComplexEvaluate(roots[i])}");
       int count = 0;
       for (var j = -5; j < 5; j++){
-        if (polynom.ComplexEvaluate(roots[i]+new Complex.from(j.toDouble())) == Complex.zero){
+        if (polynom.ComplexEvaluate(roots[i]+new Complex.from(j.toDouble())).Modulus <= 0.00001){
           count++;
         }
       }
@@ -899,7 +909,7 @@ List<double> GetSecantRoots(List<String> postfixStack){
     } else{
       int count = 0;
       for (var j = -5; j < 5; j++){
-        if (EvaluateFuncAt(postfixStack, roots[i]+j) == 0){
+        if (EvaluateFuncAt(postfixStack, roots[i]+j).abs() <= 0.00001){
           count++;
         }
       }
@@ -1078,13 +1088,8 @@ void PlotFunction(List<String> postfixStack){
   double maxX;
   double minY;
   double maxY;
-  if (eMinX != null){
-    minX = eMinX;
-    maxX = eMaxX;
-  } else{
-    minX = -10.0;
-    maxX = 10.0;
-  }
+  minX = -10.0;
+  maxX = 10.0;
   if (!EvaluateFuncAt(postfixStack, minX).isFinite){
     minX = -1.0;
   }
@@ -1104,10 +1109,6 @@ void PlotFunction(List<String> postfixStack){
   if (minY > EvaluateFuncAt(postfixStack, (minX+maxX)/2)){
     minY = EvaluateFuncAt(postfixStack, (minX+maxX)/2) - 3.0;
   }
-  if (eMinY != null){
-    minY = eMinY;
-    maxY = eMaxY;
-  }
   if (minY > maxY){
     double tmp = minY;
     minY = maxY;
@@ -1124,6 +1125,14 @@ void PlotFunction(List<String> postfixStack){
   }
   if (!maxY.isFinite){
     maxY = minY < 0 ? minY.abs() : minY*2;
+  }
+  if (eMinX != null){
+    minX = eMinX;
+    maxX = eMaxX;
+  }
+  if (eMinY != null){
+    minY = eMinY;
+    maxY = eMaxY;
   }
   print("minX:$minX, maxX:$maxX > ${EvaluateFuncAt(postfixStack, minX+2.0)} : ${EvaluateFuncAt(postfixStack, maxX-2.0)} > minY:$minY, maxY:$maxY");
   ctx.fillStyle = "#111111";// = "#292929";

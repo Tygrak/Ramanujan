@@ -134,6 +134,8 @@ Complex Pow(Complex n, Complex toPow){
   else if (n != Complex.zero && toPow == Complex.zero) return Complex.one;
   else if (toPow.r % 1 == 0 && toPow.i == 0 && toPow.r >= 1){
     return n.powint(toPow.r.round());
+  } else if (toPow.i == 0 && toPow.r < 0){
+    return Complex.one/Pow(n, -toPow);
   }
   double x = pow(n.ModulusSquared, (toPow.r/2))*pow(e, -toPow.i*n.Argument);
   Complex val = new Complex(x*cos((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument), x*sin((toPow.i*log(n.ModulusSquared))/2+toPow.r*n.Argument));
