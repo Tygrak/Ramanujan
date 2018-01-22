@@ -32,6 +32,11 @@ void main(){
     Element menu = querySelector("#plotoptions");
     menu.classes.toggle("hidden");}
   );
+  ButtonElement summodebutton = querySelector("#summodebutton");
+  summodebutton.addEventListener("click", (e) {
+    Element menu = querySelector("#summodeoptions");
+    menu.classes.toggle("hidden");}
+  );
   ButtonElement setplotrangebutton = querySelector("#setplotrangebutton");
   setplotrangebutton.addEventListener("click", SetPlotRangeButtonClicked);
   LoadLinkParametres();
@@ -182,6 +187,29 @@ void LoadLinkParametres(){
     Element menu = querySelector("#plotoptions");
     menu.classes.add("hidden");
   }
+  if (Uri.base.queryParameters['sum'] == "1"){
+    ButtonElement plotenabledbutton = querySelector("#summodebutton");
+    plotenabledbutton.classes.add("button-active");
+    Element menu = querySelector("#summodeoptions");
+    menu.classes.remove("hidden");
+  }
+  if (Uri.base.queryParameters['summin'] != "" && Uri.base.queryParameters['summin'] != null){
+    print("SumMin: ${Uri.base.queryParameters['summin']}");
+    InputElement input = querySelector("[name=nfrom]");
+    input.value = num.parse(Uri.base.queryParameters['summin']).toString();
+  }
+  if (Uri.base.queryParameters['summax'] != "" && Uri.base.queryParameters['summax'] != null){
+    print("SumMax: ${Uri.base.queryParameters['summax']}");
+    InputElement input = querySelector("[name=nto]");
+    input.value = num.parse(Uri.base.queryParameters['summax']).toString();
+  }
+  if (Uri.base.queryParameters['menu'] == "1"){
+    ButtonElement sidemenubutton = querySelector("#sidemenubutton");
+    sidemenubutton.innerHtml = "x";
+    sidemenubutton.classes.add("button-active");
+    Element menu = querySelector("#sidemenu");
+    menu.classes.toggle("sidemenu-open");
+  }
   if (Uri.base.queryParameters['q'] != "" && Uri.base.queryParameters['q'] != null){
     print("Equation from url: ${Uri.base.queryParameters['q']}");
     InputElement element = querySelector("[name=equation]");
@@ -208,6 +236,14 @@ void CreateLink(){
     ButtonElement plotenabledbutton = querySelector("#plotenabledbutton");
     if (!plotenabledbutton.classes.contains("button-active")){
       link += "&plot=0";
+    }
+    ButtonElement summodebutton = querySelector("#summodebutton");
+    if (summodebutton.classes.contains("button-active")){
+      link += "&sum=1";
+      InputElement input = querySelector("[name=nfrom]");
+      link += "&summin=${input.value}";
+      input = querySelector("[name=nto]");
+      link += "&summax=${input.value}";
     }
     PageAddResult("Equation Link", link);
   } else{
@@ -533,6 +569,17 @@ List<String> ParseEquation(String equation){
         number = "i";
       } else{
         number = "i";
+      }
+      AddNumberToStack();
+    } else if (equation[i] == "n"){
+      if (number == "-"){
+        number += "n";
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = "n";
+      } else{
+        number = "n";
       }
       AddNumberToStack();
     } else{
@@ -1229,110 +1276,129 @@ void PlotFunction(List<String> postfixStack){
 }
 
 double GetPostfixValue(List<String> postfixStack){
-  Queue<num> stack = new Queue<num>();
-  for (var i = 0; i < postfixStack.length; i++){
-    num value;
-    try{
-      value = num.parse(postfixStack[i]);
-    } catch (e){
-    }
-    if (value != null){
-      stack.add(value);
-    } else if (postfixStack[i] == "+"){
-      double last = stack.removeLast();
-      stack.add(stack.removeLast()+last);
-    } else if (postfixStack[i] == "-"){
-      double last = stack.removeLast();
-      stack.add(stack.removeLast()-last);
-    } else if (postfixStack[i] == "*"){
-      double last = stack.removeLast();
-      stack.add(stack.removeLast()*last);
-    } else if (postfixStack[i] == "**"){
-      double last = stack.removeLast();
-      stack.add(pow(stack.removeLast(), last));
-    } else if (postfixStack[i] == "/"){
-      double last = stack.removeLast();
-      stack.add(stack.removeLast()/last);
-    } else if (postfixStack[i] == "%"){
-      double last = stack.removeLast();
-      stack.add(stack.removeLast()%last);
-    } else if (postfixStack[i] == "!"){
-      stack.add(fact(stack.removeLast()));
-    } else if (postfixStack[i] == "sin"){
-      stack.add(sin(stack.removeLast()));
-    } else if (postfixStack[i] == "cos"){
-      stack.add(cos(stack.removeLast()));
-    } else if (postfixStack[i] == "tan"){
-      stack.add(tan(stack.removeLast()));
-    } else if (postfixStack[i] == "cotan"){
-      stack.add(cotan(stack.removeLast()));
-    } else if (postfixStack[i] == "sec"){
-      stack.add(sec(stack.removeLast()));
-    } else if (postfixStack[i] == "cosec"){
-      stack.add(cosec(stack.removeLast()));
-    } else if (postfixStack[i] == "sinh"){
-      stack.add(sinh(stack.removeLast()));
-    } else if (postfixStack[i] == "cosh"){
-      stack.add(cosh(stack.removeLast()));
-    } else if (postfixStack[i] == "tanh"){
-      stack.add(tanh(stack.removeLast()));
-    } else if (postfixStack[i] == "cotanh"){
-      stack.add(cotanh(stack.removeLast()));
-    } else if (postfixStack[i] == "sech"){
-      stack.add(sech(stack.removeLast()));
-    } else if (postfixStack[i] == "cosech"){
-      stack.add(cosech(stack.removeLast()));
-    } else if (postfixStack[i] == "arcsin"){
-      stack.add(arcsin(stack.removeLast()));
-    } else if (postfixStack[i] == "arccos"){
-      stack.add(arccos(stack.removeLast()));
-    } else if (postfixStack[i] == "arctan"){
-      stack.add(arctan(stack.removeLast()));
-    } else if (postfixStack[i] == "arccotan"){
-      stack.add(arccotan(stack.removeLast()));
-    } else if (postfixStack[i] == "arcsec"){
-      stack.add(arcsec(stack.removeLast()));
-    } else if (postfixStack[i] == "arccosec"){
-      stack.add(arccosec(stack.removeLast()));
-    } else if (postfixStack[i] == "sqrt"){
-      stack.add(sqrt(stack.removeLast()));
-    } else if (postfixStack[i] == "exp"){
-      stack.add(exp(stack.removeLast()));
-    } else if (postfixStack[i] == "gamma"){
-      stack.add(gamma(stack.removeLast()));
-    } else if (postfixStack[i] == "ln"){
-      stack.add(log(stack.removeLast()));
-    } else if (postfixStack[i] == "log"){
-      stack.add(log(stack.removeLast())/log(10));
-    } else if (postfixStack[i] == "abs"){
-      double last = stack.removeLast();
-      if (last > 0){
-        stack.add(last);
-      } else{
-        stack.add(-last);
-      }
-    } else if (postfixStack[i] == "sign"){
-      double last = stack.removeLast();
-      if (last > 0){
-        stack.add(1);
-      } else if (last < 0){
-        stack.add(-1);
-      } else{
-        stack.add(0);
-      }
-    } else if (postfixStack[i] == "floor"){
-      stack.add((stack.removeLast()).floorToDouble());
-    } else if (postfixStack[i] == "ceil"){
-      stack.add((stack.removeLast()).ceilToDouble());
-    } else if (postfixStack[i] == "round"){
-      stack.add((stack.removeLast()).roundToDouble());
-    } else if (postfixStack[i] == "choose"){
-      double last = stack.removeLast();
-      stack.add(binomialCoefficient(stack.removeLast(), last));
-    }
-    //print("${postfixStack[i]} : $stack");
+  double result = 0.0;
+  int nmin = 1;
+  int nmax = 2;
+  ButtonElement summodeButton = querySelector("#summodebutton");
+  if (summodeButton.classes.contains("button-active")){
+    InputElement input = querySelector("[name=nfrom]");
+    nmin = num.parse(input.value);
+    input = querySelector("[name=nto]");
+    nmax = num.parse(input.value)+1;
   }
-  return stack.removeLast().toDouble();
+  for (var n = nmin; n < nmax; n++){
+    List<String> equationStack = new List<String>.from(postfixStack);
+    for (var i = 0; i < equationStack.length; i++){
+      if (equationStack[i] == "n"){
+        equationStack[i] = n.toString();
+      }
+    }
+    Queue<num> stack = new Queue<num>();
+    for (var i = 0; i < equationStack.length; i++){
+      num value;
+      try{
+        value = num.parse(equationStack[i]);
+      } catch (e){
+      }
+      if (value != null){
+        stack.add(value);
+      } else if (equationStack[i] == "+"){
+        double last = stack.removeLast();
+        stack.add(stack.removeLast()+last);
+      } else if (equationStack[i] == "-"){
+        double last = stack.removeLast();
+        stack.add(stack.removeLast()-last);
+      } else if (equationStack[i] == "*"){
+        double last = stack.removeLast();
+        stack.add(stack.removeLast()*last);
+      } else if (equationStack[i] == "**"){
+        double last = stack.removeLast();
+        stack.add(pow(stack.removeLast(), last));
+      } else if (equationStack[i] == "/"){
+        double last = stack.removeLast();
+        stack.add(stack.removeLast()/last);
+      } else if (equationStack[i] == "%"){
+        double last = stack.removeLast();
+        stack.add(stack.removeLast()%last);
+      } else if (equationStack[i] == "!"){
+        stack.add(fact(stack.removeLast()));
+      } else if (equationStack[i] == "sin"){
+        stack.add(sin(stack.removeLast()));
+      } else if (equationStack[i] == "cos"){
+        stack.add(cos(stack.removeLast()));
+      } else if (equationStack[i] == "tan"){
+        stack.add(tan(stack.removeLast()));
+      } else if (equationStack[i] == "cotan"){
+        stack.add(cotan(stack.removeLast()));
+      } else if (equationStack[i] == "sec"){
+        stack.add(sec(stack.removeLast()));
+      } else if (equationStack[i] == "cosec"){
+        stack.add(cosec(stack.removeLast()));
+      } else if (equationStack[i] == "sinh"){
+        stack.add(sinh(stack.removeLast()));
+      } else if (equationStack[i] == "cosh"){
+        stack.add(cosh(stack.removeLast()));
+      } else if (equationStack[i] == "tanh"){
+        stack.add(tanh(stack.removeLast()));
+      } else if (equationStack[i] == "cotanh"){
+        stack.add(cotanh(stack.removeLast()));
+      } else if (equationStack[i] == "sech"){
+        stack.add(sech(stack.removeLast()));
+      } else if (equationStack[i] == "cosech"){
+        stack.add(cosech(stack.removeLast()));
+      } else if (equationStack[i] == "arcsin"){
+        stack.add(arcsin(stack.removeLast()));
+      } else if (equationStack[i] == "arccos"){
+        stack.add(arccos(stack.removeLast()));
+      } else if (equationStack[i] == "arctan"){
+        stack.add(arctan(stack.removeLast()));
+      } else if (equationStack[i] == "arccotan"){
+        stack.add(arccotan(stack.removeLast()));
+      } else if (equationStack[i] == "arcsec"){
+        stack.add(arcsec(stack.removeLast()));
+      } else if (equationStack[i] == "arccosec"){
+        stack.add(arccosec(stack.removeLast()));
+      } else if (equationStack[i] == "sqrt"){
+        stack.add(sqrt(stack.removeLast()));
+      } else if (equationStack[i] == "exp"){
+        stack.add(exp(stack.removeLast()));
+      } else if (equationStack[i] == "gamma"){
+        stack.add(gamma(stack.removeLast()));
+      } else if (equationStack[i] == "ln"){
+        stack.add(log(stack.removeLast()));
+      } else if (equationStack[i] == "log"){
+        stack.add(log(stack.removeLast())/log(10));
+      } else if (equationStack[i] == "abs"){
+        double last = stack.removeLast();
+        if (last > 0){
+          stack.add(last);
+        } else{
+          stack.add(-last);
+        }
+      } else if (equationStack[i] == "sign"){
+        double last = stack.removeLast();
+        if (last > 0){
+          stack.add(1);
+        } else if (last < 0){
+          stack.add(-1);
+        } else{
+          stack.add(0);
+        }
+      } else if (equationStack[i] == "floor"){
+        stack.add((stack.removeLast()).floorToDouble());
+      } else if (equationStack[i] == "ceil"){
+        stack.add((stack.removeLast()).ceilToDouble());
+      } else if (equationStack[i] == "round"){
+        stack.add((stack.removeLast()).roundToDouble());
+      } else if (equationStack[i] == "choose"){
+        double last = stack.removeLast();
+        stack.add(binomialCoefficient(stack.removeLast(), last));
+      }
+      //print("${postfixStack[i]} : $stack");
+    }
+    result += stack.removeLast().toDouble();
+  }
+  return result;
 }
 
 Complex GetComplexPostfixValue(List<String> postfixStack){

@@ -155,7 +155,7 @@ body {
 	background: #1d1c1c;
 }
 
-.sidemenu #plotoptions {
+.sidemenu #plotoptions, .sidemenu #summodeoptions {
 	display: block;
     color: #ffffff;
     background: #583c22;
@@ -168,8 +168,12 @@ body {
     width: 100%;
 }
 
-.sidemenu #plotoptions.hidden {
+.sidemenu #plotoptions.hidden, .sidemenu #summodeoptions.hidden {
 	display: none;
+}
+
+.sidemenu #summodeoptions .label {
+    display:inline-block;
 }
 
 .sidemenu #plotoptions .label {
@@ -177,12 +181,12 @@ body {
     width: 10%;
 }
 
-.sidemenu #plotoptions input {
+.sidemenu #plotoptions input, .sidemenu #summodeoptions input {
     width: 25%;
     text-align: center;
 }
 
-.sidemenu #plotoptions button {
+.sidemenu #plotoptions button, .sidemenu #summodeoptions button {
     width: 80%;
     padding-top: 0.5em;
     padding-bottom: 0.5em;
