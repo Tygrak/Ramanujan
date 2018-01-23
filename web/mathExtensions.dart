@@ -14,6 +14,35 @@ List<int> NumDivisors(int number){
   return divisors;
 }
 
+List<int> PrimesTo(int max){
+  List<int> primes = new List<int>();
+  primes.add(2);
+  for (var i = 3; i <= max; i=i+2){
+    primes.add(i);
+  }
+  for (var i = 1; i < primes.length; i++){
+    for (var j = primes.length-1; j >= i+1; j--){
+      if (primes[j] % primes[i] == 0){
+        primes.removeAt(j);
+      }
+    }
+  }
+  return primes;
+}
+
+int Sigma(int number, int toPow){
+  List<int> divisors = NumDivisors(number);
+  if (toPow == 0){
+    return divisors.length;
+  } else{
+    int sum = 0;
+    for (var i = 0; i < divisors.length; i++){
+      sum += (pow(divisors[i], toPow));
+    }
+    return sum;
+  }
+}
+
 double MapToRange(double value, double min1, double max1, double min2, double max2){
   return (value-min1)/(max1-min1) * (max2-min2) + min2;
 }

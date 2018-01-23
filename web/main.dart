@@ -11,9 +11,15 @@ double eMinX;
 double eMinY;
 double eMaxX;
 double eMaxY;
+List<int> primes;
+int highestPrecalculatedPrime;
+double lastMinX;
+double lastMinY;
+double lastMaxX;
+double lastMaxY;
 
 var stream;
-
+//TODO: on clicking graph show aproximmate position
 void main(){
   button = querySelector("#calculatebutton");
   canvas = querySelector("#canvas");
@@ -50,6 +56,9 @@ void main(){
       CreateLink();
     }
   });
+  print("Precalculating primes to 625");
+  primes = PrimesTo(625);
+  highestPrecalculatedPrime = 625;
 }
 
 void ButtonClicked(e){
@@ -558,6 +567,26 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
       stack.add("choose");
       i += 5;
+    } else if (equation.length > i+4 && equation.substring(i, i+5) == "sigma"){
+      AddNumberToStack();
+      stack.add("sigma");
+      i += 4;
+    } else if (equation.length > i+6 && equation.substring(i, i+7) == "divisor"){
+      AddNumberToStack();
+      stack.add("divisor");
+      i += 6;
+    } else if (equation.length > i+7 && equation.substring(i, i+8) == "divisors"){
+      AddNumberToStack();
+      stack.add("divisor");
+      i += 7;
+    } else if (equation.length > i+6 && equation.substring(i, i+7) == "isprime"){
+      AddNumberToStack();
+      stack.add("isprime");
+      i += 6;
+    } else if (equation.length > i+4 && equation.substring(i, i+5) == "prime"){
+      AddNumberToStack();
+      stack.add("prime");
+      i += 4;
     } else if (equation[i].contains(new RegExp("[0-9.]"))){
       number += equation[i];
     } else if (equation[i] == "i"){
@@ -918,7 +947,6 @@ List<double> GetSecantRoots(List<String> postfixStack){
       double fz = EvaluateFuncAt(postfixStack, z);
       double flastz = EvaluateFuncAt(postfixStack, lastz);
       if (fz - flastz == 0){
-        
         break;
       }
       z = z-(fz)*((z-lastz)/(fz - flastz));
@@ -1023,6 +1051,10 @@ void PlotPolynomFunction(VariablePolynom polynom){
     minY = minY.roundToDouble();
     maxY = maxY.roundToDouble();
   }
+  lastMinX = minX;
+  lastMaxX = maxX;
+  lastMinY = minY;
+  lastMaxY = maxY;
   print("minX:$minX, maxX:$maxX > ${polynom.Evaluate(minX+2.0)} : ${polynom.Evaluate(maxX-2.0)} > minY:$minY, maxY:$maxY");
   ctx.fillStyle = "#111111";// = "#292929";
   ctx.strokeStyle = "white";
@@ -1181,6 +1213,10 @@ void PlotFunction(List<String> postfixStack){
     minY = eMinY;
     maxY = eMaxY;
   }
+  lastMinX = minX;
+  lastMaxX = maxX;
+  lastMinY = minY;
+  lastMaxY = maxY;
   print("minX:$minX, maxX:$maxX > ${EvaluateFuncAt(postfixStack, minX+2.0)} : ${EvaluateFuncAt(postfixStack, maxX-2.0)} > minY:$minY, maxY:$maxY");
   ctx.fillStyle = "#111111";// = "#292929";
   ctx.strokeStyle = "white";
@@ -1393,6 +1429,34 @@ double GetPostfixValue(List<String> postfixStack){
       } else if (equationStack[i] == "choose"){
         double last = stack.removeLast();
         stack.add(binomialCoefficient(stack.removeLast(), last));
+      } else if (equationStack[i] == "divisor"){
+        double last = stack.removeLast();
+        stack.add(Sigma(last.toInt(), 0));
+      } else if (equationStack[i] == "sigma"){
+        double last = stack.removeLast();
+        stack.add(Sigma(last.toInt(), 1));
+      } else if (equationStack[i] == "prime"){
+        int last = stack.removeLast().toInt();
+        if (last <= 0){
+          stack.add(0);
+        } else{
+          while (last > primes.length){
+            print("Calculating more primes - max: ${highestPrecalculatedPrime*2}, currently have ${primes.length} primes, need $last");
+            primes = PrimesTo(highestPrecalculatedPrime*2);
+            highestPrecalculatedPrime = highestPrecalculatedPrime*2;
+            print("Done, now have ${primes.length} primes");
+          }
+          stack.add(primes[last-1]);
+        }
+      } else if (equationStack[i] == "isprime"){
+        int last = stack.removeLast().toInt();
+        while (last > primes.last){
+          print("Calculating more primes - max: ${highestPrecalculatedPrime*2}, currently highest is ${primes.last}, need $last");
+          primes = PrimesTo(highestPrecalculatedPrime*2);
+          highestPrecalculatedPrime = highestPrecalculatedPrime*2;
+          print("Done, now have ${primes.length} primes");
+        }
+        stack.add(primes.contains(last) ? 1 : 0);
       }
       //print("${postfixStack[i]} : $stack");
     }
