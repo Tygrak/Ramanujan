@@ -19,11 +19,11 @@ double lastMaxX;
 double lastMaxY;
 
 var stream;
-//TODO: on clicking graph show aproximmate position
+
 void main(){
   button = querySelector("#calculatebutton");
   canvas = querySelector("#canvas");
-  print(canvas.className);
+  canvas.onClick.listen(CanvasClicked);
   button.addEventListener("click", ButtonClicked);
   ButtonElement linkbutton = querySelector("#createlinkbutton");
   linkbutton.addEventListener("click", (e) {CreateLink();});
@@ -45,6 +45,9 @@ void main(){
   );
   ButtonElement setplotrangebutton = querySelector("#setplotrangebutton");
   setplotrangebutton.addEventListener("click", SetPlotRangeButtonClicked);
+  print("Precalculating primes to 625");
+  primes = PrimesTo(625);
+  highestPrecalculatedPrime = 625;
   LoadLinkParametres();
   window.onKeyDown.listen((KeyboardEvent ke){
     if (ke.keyCode == KeyCode.ENTER){
@@ -56,9 +59,6 @@ void main(){
       CreateLink();
     }
   });
-  print("Precalculating primes to 625");
-  primes = PrimesTo(625);
-  highestPrecalculatedPrime = 625;
 }
 
 void ButtonClicked(e){
@@ -265,6 +265,15 @@ void CreateLink(){
   }
 }
 
+void CanvasClicked(e){
+  int x = e.client.x - canvas.getBoundingClientRect().left;
+  int y = e.client.y - canvas.getBoundingClientRect().top;
+  Element posx = querySelector("#coordx");
+  Element posy = querySelector("#coordy");
+  posx.innerHtml = MapToRange(x.toDouble(), 0.0, canvas.width.toDouble(), lastMinX, lastMaxX).toStringAsFixed(2);
+  posy.innerHtml = MapToRange(y.toDouble(), 0.0, canvas.height.toDouble(), lastMinY, lastMaxY).toStringAsFixed(2);
+}
+
 void SetPlotRangeButtonClicked(e){
   InputElement input = querySelector("[name=xfrom]");
   eMinX = num.parse(input.value);
@@ -379,6 +388,14 @@ List<String> ParseEquation(String equation){
         number = PI.toString();
       }
       AddNumberToStack();
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "mod"){
+      AddNumberToStack();
+      stack.add("mod");
+      i += 2;
+    } else if (equation.length > i+2 && equation.substring(i, i+3) == "rem"){
+      AddNumberToStack();
+      stack.add("rem");
+      i += 2;
     } else if (equation.length > i+2 && equation.substring(i, i+3) == "exp"){
       AddNumberToStack();
       stack.add("exp");
@@ -1358,6 +1375,12 @@ double GetPostfixValue(List<String> postfixStack){
         stack.add(stack.removeLast()%last);
       } else if (equationStack[i] == "!"){
         stack.add(fact(stack.removeLast()));
+      } else if (equationStack[i] == "mod"){
+        double last = stack.removeLast();
+        stack.add(mod(stack.removeLast(), last));
+      } else if (equationStack[i] == "rem"){
+        double last = stack.removeLast();
+        stack.add(remainder(stack.removeLast(), last));
       } else if (equationStack[i] == "sin"){
         stack.add(sin(stack.removeLast()));
       } else if (equationStack[i] == "cos"){
@@ -1609,6 +1632,10 @@ int GetOpPrecedence(String op){
   } else if (op == "/"){
     return 2;
   } else if (op == "%"){
+    return 2;
+  } else if (op == "mod"){
+    return 2;
+  } else if (op == "rem"){
     return 2;
   } else if (op == "**"){
     return 3;

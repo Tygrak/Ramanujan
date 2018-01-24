@@ -47,6 +47,14 @@ double MapToRange(double value, double min1, double max1, double min2, double ma
   return (value-min1)/(max1-min1) * (max2-min2) + min2;
 }
 
+int mod(double a, double n){
+  return (a - (n * (a/n).floor())).toInt();
+}
+
+int remainder(double a, double n){
+  return (a - (n * (a/n).truncateToDouble())).toInt();
+}
+
 double fact(double val){
   double res = 1.0;
   if (val % 1 == 0){

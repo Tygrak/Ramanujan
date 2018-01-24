@@ -195,6 +195,42 @@ body {
     border-radius: 5px;
 }
 
+.sidemenu #graphposition {
+    position: absolute;
+    bottom: 0px;
+    display: block;
+    background: #583c22;
+    padding-top: 0.5em;
+    padding-bottom: 0.5em;
+    border: none;
+    width: 100%;
+}
+
+.sidemenu #graphposition .left {
+    display: inline-block;
+    width: 50%;
+}
+.sidemenu #graphposition .right {
+    position: absolute;
+    right: 0;
+    display: inline-block;
+    width: 50%;
+}
+
+.sidemenu #graphposition .label {
+    margin-left: 5px;
+    color: #ffffff;
+    font-size: 0.8em;
+    font-weight: 100;
+}
+
+.sidemenu #graphposition .position {
+    margin-left: 25px;
+    color: #ffffff;
+    font-size: 1.0em;
+    font-weight: 250;
+}
+
 /* Orientation-dependent styles for the content of the menu */
 
 .sidemenu-vertical {
