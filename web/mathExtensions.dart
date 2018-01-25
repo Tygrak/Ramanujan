@@ -155,6 +155,8 @@ double arccos(double x){
 }
 
 double arctan(double x){
+  if (x == double.infinity) return pi/2;
+  if (x == double.negativeInfinity) return -pi/2;
   double a = pi/2-0.0000001;
   double b = -pi/2+0.0000001;
   for (var i = 0; i < 100; i++) {

@@ -49,11 +49,15 @@ class Complex{
   }
 
   double get Argument{
-    if (r > 0.0){
-      return arctan(i/r);
-    } else{
-      return pi+arctan(i/r);
+    if (this == Complex.zero) return 0.0;
+    if (r == 0.0 && i < 0) return -pi/2;
+    double res = arctan(i/r);
+    if (r < 0.0 && i >= 0.0){
+      res += pi;
+    } else if (r < 0.0 && i < 0.0){
+      res -= pi;
     }
+    return res;
   }
 
   Complex get Sign{

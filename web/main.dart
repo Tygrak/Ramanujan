@@ -608,7 +608,9 @@ List<String> ParseEquation(String equation){
       number += equation[i];
     } else if (equation[i] == "i"){
       if (number == "-"){
-        number += "i";
+        stack.add("-1");
+        stack.add("*");
+        number = "i";
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
@@ -619,7 +621,9 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
     } else if (equation[i] == "n"){
       if (number == "-"){
-        number += "n";
+        stack.add("-1");
+        stack.add("*");
+        number = "n";
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
@@ -630,7 +634,9 @@ List<String> ParseEquation(String equation){
       AddNumberToStack();
     } else{
       if (number == "-"){
-        number += "x";
+        stack.add("-1");
+        stack.add("*");
+        number = "x";
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
@@ -1577,17 +1583,17 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
       stack.add(Gamma(stack.removeLast()));
     } else if (postfixStack[i] == "ln"){
       Complex last = stack.removeLast();
-      if (last.i == 0.0){
+      if (last.i == 0.0 && last.r >= 0.0){
         stack.add(new Complex.from(log(last.r)));
       } else{
-        stack.add(Log(stack.removeLast()));
+        stack.add(Log(last));
       }
     } else if (postfixStack[i] == "log"){
       Complex last = stack.removeLast();
-      if (last.i == 0.0){
+      if (last.i == 0.0 && last.r >= 0.0){
         stack.add(new Complex.from(log(last.r)/log(10.0)));
       } else{
-        stack.add(Log(stack.removeLast())/Log(new Complex.from(10.0)));
+        stack.add(Log(last)/Log(new Complex.from(10.0)));
       }
     } else if (postfixStack[i] == "abs"){
       stack.add(new Complex.from(stack.removeLast().Modulus));
