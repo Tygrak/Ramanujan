@@ -53,6 +53,7 @@ A smart calculator in the browser. Press F1 or the button in the top right to op
 | π or pi | Pi |
 | e | Euler's number |
 | φ or ϕ or phi | Golden ratio or phi |
+| γ | Euler–Mascheroni constant |
 | i | The imaginary unit - square root of -1 |
 | ° | Can be used to convert from degrees to radians - approximately 0.0174532 |
 

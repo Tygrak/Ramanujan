@@ -267,7 +267,7 @@ void CreateLink(){
 
 void CanvasClicked(e){
   int x = e.client.x - canvas.getBoundingClientRect().left;
-  int y = e.client.y - canvas.getBoundingClientRect().top;
+  int y = canvas.height- (e.client.y - canvas.getBoundingClientRect().top);
   Element posx = querySelector("#coordx");
   Element posy = querySelector("#coordy");
   posx.innerHtml = MapToRange(x.toDouble(), 0.0, canvas.width.toDouble(), lastMinX, lastMaxX).toStringAsFixed(2);
@@ -443,6 +443,17 @@ List<String> ParseEquation(String equation){
         number = (1.61803398874989484820458683436563811772030917980576).toString();
       } else{
         number = (1.61803398874989484820458683436563811772030917980576).toString();
+      }
+      AddNumberToStack();
+    } else if (equation[i] == "γ"){
+      if (number == "-"){
+        number += (0.5772156649015328606065120900824024310421).toString();
+      } else if (number.length > 0){
+        AddNumberToStack();
+        stack.add("*");
+        number = (0.5772156649015328606065120900824024310421).toString();
+      } else{
+        number = (0.5772156649015328606065120900824024310421).toString();
       }
       AddNumberToStack();
     } else if (equation[i] == "!"){
