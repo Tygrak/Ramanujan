@@ -59,4 +59,4 @@ A smart calculator in the browser. Press F1 or the button in the top right to op
 
 # More info
 Any one character can be used as a variable - but most often x is used anyways. In sum mode n is used as the index of the current term of the sum.
-Graphs can be clicked to get the coordinates in the side menu.
+Graphs can be clicked to get the coordinates in the side menu. By default radians are used everywhere, you can use the "°" degree symbol to use degrees or turn on Degree mode in the side menu. 

@@ -7,6 +7,7 @@ import 'mathExtensions.dart';
 
 ButtonElement button;
 CanvasElement canvas;
+ButtonElement degreemodebutton;
 double eMinX;
 double eMinY;
 double eMaxX;
@@ -38,6 +39,7 @@ void main(){
     Element menu = querySelector("#plotoptions");
     menu.classes.toggle("hidden");}
   );
+  degreemodebutton = querySelector("#degreemodebutton");
   ButtonElement summodebutton = querySelector("#summodebutton");
   summodebutton.addEventListener("click", (e) {
     Element menu = querySelector("#summodeoptions");
@@ -82,12 +84,14 @@ void ButtonClicked(e){
     if ((expressionValue.i.round()-expressionValue.i).abs() < 0.000005){
       expressionValue = new Complex(expressionValue.r, expressionValue.i.roundToDouble());
     }
-    print("$infixStack -> $postfixStack -> $expressionValue");
     PageAddResult("Result", "$expressionValue");
   } catch (e){
     try{
       double expressionValue = GetPostfixValue(postfixStack);
       print("$infixStack -> $postfixStack -> $expressionValue");
+      if ((expressionValue.round()-expressionValue).abs() < 0.00000005){
+        expressionValue = expressionValue.roundToDouble();
+      }
       PageAddResult("Result", "$expressionValue");
     } catch (e){
       try{
@@ -196,9 +200,13 @@ void LoadLinkParametres(){
     Element menu = querySelector("#plotoptions");
     menu.classes.add("hidden");
   }
+  if (Uri.base.queryParameters['mdegree'] == "1"){
+    ButtonElement degreemodebutton = querySelector("#degreemodebutton");
+    degreemodebutton.classes.add("button-active");
+  }
   if (Uri.base.queryParameters['sum'] == "1"){
-    ButtonElement plotenabledbutton = querySelector("#summodebutton");
-    plotenabledbutton.classes.add("button-active");
+    ButtonElement summodebutton = querySelector("#summodebutton");
+    summodebutton.classes.add("button-active");
     Element menu = querySelector("#summodeoptions");
     menu.classes.remove("hidden");
   }
@@ -245,6 +253,9 @@ void CreateLink(){
     ButtonElement plotenabledbutton = querySelector("#plotenabledbutton");
     if (!plotenabledbutton.classes.contains("button-active")){
       link += "&plot=0";
+    }
+    if (degreemodebutton.classes.contains("button-active")){
+      link += "&mdegree=1";
     }
     ButtonElement summodebutton = querySelector("#summodebutton");
     if (summodebutton.classes.contains("button-active")){
@@ -1399,41 +1410,96 @@ double GetPostfixValue(List<String> postfixStack){
         double last = stack.removeLast();
         stack.add(remainder(stack.removeLast(), last));
       } else if (equationStack[i] == "sin"){
-        stack.add(sin(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(sin(last));
       } else if (equationStack[i] == "cos"){
-        stack.add(cos(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(cos(last));
       } else if (equationStack[i] == "tan"){
-        stack.add(tan(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(tan(last));
       } else if (equationStack[i] == "cotan"){
-        stack.add(cotan(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(cotan(last));
       } else if (equationStack[i] == "sec"){
-        stack.add(sec(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(sec(last));
       } else if (equationStack[i] == "cosec"){
-        stack.add(cosec(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(cosec(last));
       } else if (equationStack[i] == "sinh"){
-        stack.add(sinh(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(sinh(last));
       } else if (equationStack[i] == "cosh"){
-        stack.add(cosh(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(cosh(last));
       } else if (equationStack[i] == "tanh"){
-        stack.add(tanh(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(tanh(last));
       } else if (equationStack[i] == "cotanh"){
-        stack.add(cotanh(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(cotanh(last));
       } else if (equationStack[i] == "sech"){
-        stack.add(sech(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(sech(last));
       } else if (equationStack[i] == "cosech"){
-        stack.add(cosech(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")) last = last*0.017453292519943295;
+        stack.add(cosech(last));
       } else if (equationStack[i] == "arcsin"){
-        stack.add(arcsin(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")){
+          stack.add(arcsin(last)*57.295779513082320876798154);
+        } else{
+          stack.add(arcsin(last));
+        }
       } else if (equationStack[i] == "arccos"){
-        stack.add(arccos(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")){
+          stack.add(arccos(last)*57.295779513082320876798154);
+        } else{
+          stack.add(arccos(last));
+        }
       } else if (equationStack[i] == "arctan"){
-        stack.add(arctan(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")){
+          stack.add(arctan(last)*57.295779513082320876798154);
+        } else{
+          stack.add(arctan(last));
+        }
       } else if (equationStack[i] == "arccotan"){
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")){
+          stack.add(arccotan(last)*57.295779513082320876798154);
+        } else{
+          stack.add(arccotan(last));
+        }
         stack.add(arccotan(stack.removeLast()));
       } else if (equationStack[i] == "arcsec"){
-        stack.add(arcsec(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")){
+          stack.add(arcsec(last)*57.295779513082320876798154);
+        } else{
+          stack.add(arcsec(last));
+        }
       } else if (equationStack[i] == "arccosec"){
-        stack.add(arccosec(stack.removeLast()));
+        double last = stack.removeLast();
+        if (degreemodebutton.classes.contains("button-active")){
+          stack.add(arccosec(last)*57.295779513082320876798154);
+        } else{
+          stack.add(arccosec(last));
+        }
       } else if (equationStack[i] == "sqrt"){
         stack.add(sqrt(stack.removeLast()));
       } else if (equationStack[i] == "exp"){
@@ -1543,19 +1609,53 @@ Complex GetComplexPostfixValue(List<String> postfixStack){
     }*/ else if (postfixStack[i] == "!"){
       stack.add(Gamma(stack.removeLast()+Complex.one));
     } else if (postfixStack[i] == "sin"){
-      stack.add(stack.removeLast().sin());
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        if (degreemodebutton.classes.contains("button-active")) last = new Complex.from(last.r*0.017453292519943295);
+        stack.add(new Complex.from(sin(last.r)));
+      } else{
+        stack.add(last.sin());
+      }
     } else if (postfixStack[i] == "cos"){
-      stack.add(stack.removeLast().cos());
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        if (degreemodebutton.classes.contains("button-active")) last = new Complex.from(last.r*0.017453292519943295);
+        stack.add(new Complex.from(cos(last.r)));
+      } else{
+        stack.add(last.cos());
+      }
     } else if (postfixStack[i] == "tan"){
-      Complex c = stack.removeLast();
-      stack.add(c.sin()/c.cos());
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        if (degreemodebutton.classes.contains("button-active")) last = new Complex.from(last.r*0.017453292519943295);
+        stack.add(new Complex.from(tan(last.r)));
+      } else{
+        stack.add(last.sin()/last.cos());
+      }
     } else if (postfixStack[i] == "cotan"){
-      Complex c = stack.removeLast();
-      stack.add(c.cos()/c.sin());
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        if (degreemodebutton.classes.contains("button-active")) last = new Complex.from(last.r*0.017453292519943295);
+        stack.add(new Complex.from(cotan(last.r)));
+      } else{
+        stack.add(last.cos()/last.sin());
+      }
     } else if (postfixStack[i] == "sec"){
-      stack.add(new Complex.from(1.0)/stack.removeLast().cos());
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        if (degreemodebutton.classes.contains("button-active")) last = new Complex.from(last.r*0.017453292519943295);
+        stack.add(new Complex.from(sec(last.r)));
+      } else{
+        stack.add(new Complex.from(1.0)/last.cos());
+      }
     } else if (postfixStack[i] == "cosec"){
-      stack.add(new Complex.from(1.0)/stack.removeLast().sin());
+      Complex last = stack.removeLast();
+      if (last.i == 0.0){
+        if (degreemodebutton.classes.contains("button-active")) last = new Complex.from(last.r*0.017453292519943295);
+        stack.add(new Complex.from(cosec(last.r)));
+      } else{
+        stack.add(new Complex.from(1.0)/last.sin());
+      }
     } /*else if (postfixStack[i] == "sinh"){
       stack.add(sinh(stack.removeLast()));
     } else if (postfixStack[i] == "cosh"){
