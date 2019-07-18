@@ -1,4 +1,5 @@
 /build/
+/.dart_tool/
 *.lock
 *.packages
 .packages

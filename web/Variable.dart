@@ -101,12 +101,16 @@ class VariablePolynom{
     //print(res);
     return res;
   }
-  bool operator ==(VariablePolynom other){
-    if (variables.length != other.variables.length){
+  bool operator ==(Object other){
+    if (!(other is VariablePolynom)){
+      return false;
+    }
+    VariablePolynom otherPolynom = other as VariablePolynom;
+    if (variables.length != otherPolynom.variables.length){
       return false;
     }
     for (var i = variables.length-1; i >= 0; i--){
-      if (variables[i] != other.variables[i]){
+      if (variables[i] != otherPolynom.variables[i]){
         return false;
       }
     }
@@ -232,7 +236,7 @@ class Variable{
   Variable operator /(Variable other){
     return new Variable(_c/other._c, _degree-other._degree);
   }
-  bool operator ==(Variable other) => (_c == other._c) && (_degree == other._degree);
+  bool operator ==(Object other) => (other is Variable) && (_c == other._c) && (_degree == other._degree);
 
   Variable absCoeficient(){
     return new Variable(_c.abs(), _degree);

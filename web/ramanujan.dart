@@ -378,25 +378,25 @@ List<String> ParseEquation(String equation){
       stack.add(")");
     } else if (equation.length > i+1 && equation.substring(i, i+2) == "pi"){
       if (number == "-"){
-        number += PI.toString();
+        number += pi.toString();
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
-        number = PI.toString();
+        number = pi.toString();
       } else{
-        number = PI.toString();
+        number = pi.toString();
       }
       AddNumberToStack();
       i += 1;
     } else if (equation[i] == "π"){
       if (number == "-"){
-        number += PI.toString();
+        number += pi.toString();
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
-        number = PI.toString();
+        number = pi.toString();
       } else{
-        number = PI.toString();
+        number = pi.toString();
       }
       AddNumberToStack();
     } else if (equation.length > i+2 && equation.substring(i, i+3) == "mod"){
@@ -413,13 +413,13 @@ List<String> ParseEquation(String equation){
       i += 2;
     } else if (equation[i] == "e"){
       if (number == "-"){
-        number += E.toString();
+        number += e.toString();
       } else if (number.length > 0){
         AddNumberToStack();
         stack.add("*");
-        number = E.toString();
+        number = e.toString();
       } else{
-        number = E.toString();
+        number = e.toString();
       }
       AddNumberToStack();
     } else if (equation[i] == "°"){

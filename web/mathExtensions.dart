@@ -105,27 +105,27 @@ double cosec(double x){
 }
 
 double sinh(double x){
-  return (pow(E, x)-pow(E, -x))/2;
+  return (pow(e, x)-pow(e, -x))/2;
 }
 
 double cosh(double x){
-  return (pow(E, x)+pow(E, -x))/2;
+  return (pow(e, x)+pow(e, -x))/2;
 }
 
 double tanh(double x){
-  return ((pow(E, x)-pow(E, -x))/2)/((pow(E, x)+pow(E, -x))/2);
+  return ((pow(e, x)-pow(e, -x))/2)/((pow(e, x)+pow(e, -x))/2);
 }
 
 double cotanh(double x){
-  return ((pow(E, x)+pow(E, -x))/2)/((pow(E, x)-pow(E, -x))/2);
+  return ((pow(e, x)+pow(e, -x))/2)/((pow(e, x)-pow(e, -x))/2);
 }
 
 double sech(double x){
-  return 2/(pow(E, x)+pow(E, -x));
+  return 2/(pow(e, x)+pow(e, -x));
 }
 
 double cosech(double x){
-  return 2/(pow(E, x)-pow(E, -x));
+  return 2/(pow(e, x)-pow(e, -x));
 }
 
 double arcsin(double x){
